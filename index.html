@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>V TOUR — Golf Championship Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --turf-900:#101d16;--turf-800:#173226;--turf-700:#1f4636;--turf-600:#33714a;--turf-500:#4c9160;
+  --sand-300:#d9c89a;--sand-200:#ecdfc0;--paper-100:#f2efe4;--paper-50:#faf8f2;
+  --ink-900:#141d17;--ink-700:#39463c;--ink-500:#6b7868;
+  --flag-red:#a8362a;--flag-red-dim:#c97167;--board-amber:#d9a13b;--sky-blue:#3d6f96;--water-blue:#3d7ea6;
+  --line:#cfc6a9;--line-dark:#38493d;--board-black:#0e150e;
+  --shadow-soft:0 1px 2px rgba(16,24,15,.09),0 10px 26px rgba(16,24,15,.10);
+  --radius-card:6px;
+}
+*{box-sizing:border-box;}html,body{margin:0;padding:0;}
+body{background:var(--paper-100);background-image:radial-gradient(ellipse at top left,rgba(51,113,74,.10),transparent 55%),radial-gradient(ellipse at bottom right,rgba(168,54,42,.05),transparent 50%);color:var(--ink-900);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{font-family:'Oswald',sans-serif;margin:0;letter-spacing:.01em;}
+.num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-variant-numeric:tabular-nums;}
+a{color:inherit;}button{font-family:inherit;cursor:pointer;}
+::selection{background:var(--board-amber);color:var(--board-black);}
+.scrollbar-thin::-webkit-scrollbar{width:8px;height:8px;}.scrollbar-thin::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+#app{min-height:100vh;display:flex;flex-direction:column;}
+.topbar{background:linear-gradient(180deg,var(--turf-800),var(--turf-900));color:var(--paper-50);padding:12px 26px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 0 rgba(0,0,0,.15),var(--shadow-soft);position:sticky;top:0;z-index:50;border-bottom:3px solid var(--board-amber);flex-wrap:wrap;gap:10px;}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-mark{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 6%,transparent 7%),radial-gradient(circle at 60% 55%,#fff 0 5%,transparent 6%),radial-gradient(circle at 45% 70%,#fff 0 5%,transparent 6%),radial-gradient(circle at 70% 30%,#fff 0 4%,transparent 5%),var(--sand-200);border:2px solid var(--paper-50);flex-shrink:0;}
+.brand-text h1{font-size:20px;color:var(--paper-50);text-transform:uppercase;letter-spacing:.08em;}
+.brand-text .sub{font-size:11px;color:var(--sand-300);letter-spacing:.1em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;}
+.nav-tabs{display:flex;gap:3px;flex-wrap:wrap;}
+.nav-tab{background:none;border:none;color:var(--sand-200);padding:8px 14px;font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;font-weight:600;border-radius:3px 3px 0 0;opacity:.65;border-bottom:2px solid transparent;transition:opacity .15s,background .15s;}
+.nav-tab:hover{opacity:.9;background:rgba(255,255,255,.06);}
+.nav-tab.active{opacity:1;color:#fff;border-bottom-color:var(--board-amber);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.pill{font-family:'Barlow Condensed',sans-serif;font-weight:700;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:6px 13px;border-radius:20px;font-size:12.5px;letter-spacing:.03em;color:var(--sand-200);white-space:nowrap;}
+.restart-btn{background:var(--flag-red);color:#fff;border:none;padding:8px 13px;border-radius:3px;font-size:11.5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.05em;text-transform:uppercase;transition:filter .15s,transform .1s;}
+.restart-btn:hover{filter:brightness(1.12);}.restart-btn:active{transform:translateY(1px);}
+main{flex:1;padding:24px;max-width:1400px;margin:0 auto;width:100%;}
+.view{display:none;}.view.active{display:block;animation:fadein .22s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--line-dark);flex-wrap:wrap;gap:10px;}
+.section-head h2{font-size:23px;color:var(--turf-900);text-transform:uppercase;letter-spacing:.02em;}
+.section-head .eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--turf-600);font-weight:700;display:block;margin-bottom:2px;}
+.btn{border:1px solid var(--turf-800);background:var(--turf-800);color:#fff;padding:9px 16px;border-radius:3px;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.04em;text-transform:uppercase;transition:transform .1s,filter .15s;}
+.btn:hover{filter:brightness(1.15);}.btn:active{transform:translateY(1px);}
+.btn.ghost{background:transparent;color:var(--turf-800);}.btn.ghost:hover{background:rgba(27,58,47,.06);}
+.btn.amber{background:var(--board-amber);border-color:var(--board-amber);color:var(--board-black);}
+.btn.danger{background:var(--flag-red);border-color:var(--flag-red);}
+.btn:disabled{opacity:.4;cursor:not-allowed;filter:none!important;}
+.btn-sm{padding:5px 10px;font-size:11px;}
+.card{background:var(--paper-50);border:1px solid var(--line);border-radius:var(--radius-card);box-shadow:var(--shadow-soft);}
+.grid{display:grid;gap:14px;}
+.grid.cols-2{grid-template-columns:repeat(2,1fr);}
+.grid.cols-3{grid-template-columns:repeat(3,1fr);}
+.grid.cols-4{grid-template-columns:repeat(4,1fr);}
+.grid.auto{grid-template-columns:repeat(auto-fill,minmax(260px,1fr));}
+@media(max-width:900px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr;}main{padding:14px;}.topbar{padding:10px 14px;}}
+.empty-state{border:1px dashed var(--line-dark);border-radius:6px;padding:36px 22px;text-align:center;color:var(--ink-500);background:rgba(255,255,255,.4);}
+.empty-state h3{color:var(--ink-700);margin-bottom:6px;font-size:17px;}
+.empty-state p{font-size:13px;max-width:440px;margin:0 auto 12px;line-height:1.5;}
+#toast-wrap{position:fixed;bottom:16px;right:16px;display:flex;flex-direction:column;gap:8px;z-index:300;}
+.toast{background:var(--turf-900);color:#fff;padding:10px 16px;border-radius:4px;font-size:13px;box-shadow:var(--shadow-soft);border-left:4px solid var(--board-amber);animation:toastin .2s ease;max-width:340px;}
+.toast.bad{border-left-color:var(--flag-red);}
+@keyframes toastin{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:none;}}
+.modal-overlay{position:fixed;inset:0;background:rgba(16,24,15,.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:18px;animation:fadein .15s ease;}
+.modal{background:var(--paper-50);border-radius:8px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);border-top:5px solid var(--board-amber);}
+.modal-pad{padding:22px 24px;}
+.modal h3{font-size:19px;color:var(--turf-900);margin-bottom:4px;text-transform:uppercase;}
+.modal .modal-sub{font-size:12px;color:var(--ink-500);margin-bottom:16px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
+.eyebrow{font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--turf-600);font-weight:700;}
+footer{text-align:center;padding:16px;font-size:11px;color:var(--ink-500);letter-spacing:.06em;text-transform:uppercase;font-family:'Barlow Condensed',sans-serif;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;font-family:'Barlow Condensed',sans-serif;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);padding:8px 10px;border-bottom:2px solid var(--line-dark);white-space:nowrap;}
+td{padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap;}
+tr.me-row{background:rgba(217,161,59,.10);}
+.avatar{border-radius:50%;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:700;font-family:'Barlow Condensed',sans-serif;flex-shrink:0;}
+.badge{display:inline-flex;align-items:center;gap:4px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:20px;}
+.badge.major{background:rgba(217,161,59,.18);color:#7a5a0a;border:1px solid rgba(217,161,59,.45);}
+.badge.status-current{background:rgba(51,113,74,.18);color:var(--turf-700);border:1px solid rgba(51,113,74,.4);}
+.badge.status-complete{background:rgba(107,120,104,.15);color:var(--ink-500);border:1px solid var(--line);}
+.badge.status-upcoming{background:transparent;color:var(--ink-500);border:1px dashed var(--line-dark);}
+.badge.water{background:rgba(61,126,166,.15);color:var(--water-blue);border:1px solid rgba(61,126,166,.4);}
+.attr-bar-row{display:grid;grid-template-columns:78px 1fr 26px;align-items:center;gap:8px;margin-top:6px;font-size:11px;}
+.attr-bar-track{height:7px;background:var(--line);border-radius:4px;overflow:hidden;}
+.attr-bar-fill{height:100%;background:linear-gradient(90deg,var(--turf-600),var(--board-amber));border-radius:4px;}
+.player-chip{display:flex;align-items:center;gap:6px;padding:7px 12px 7px 7px;border-radius:20px;border:1px solid var(--line);background:#fff;color:var(--ink-900);font-size:12px;transition:background .15s,transform .1s;}
+.player-chip:active:not(:disabled){transform:translateY(1px);}
+.player-chip.active{border-color:var(--turf-700);background:var(--turf-700);color:#fff;}
+.player-chip:disabled{opacity:.5;}
+.player-chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+.wind-flag{display:inline-flex;align-items:center;gap:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;}
+.seed-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--turf-800);color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;flex-shrink:0;}
+.hof-badge{display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border-radius:6px;background:rgba(217,161,59,.10);border:1px solid rgba(217,161,59,.35);min-width:64px;}
+.hof-badge .n{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:#7a5a0a;}
+.hof-badge .l{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-500);}
+@media(max-width:640px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr!important;}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <h1>V Tour</h1>
+        <span class="sub" id="tour-label-top">Tour 1 · Event 0 of 10</span>
+      </div>
+    </div>
+    <nav class="nav-tabs" id="nav-tabs">
+      <button class="nav-tab active" data-view="dashboard">Dashboard</button>
+      <button class="nav-tab" data-view="schedule">Schedule</button>
+      <button class="nav-tab" data-view="courses">Courses</button>
+      <button class="nav-tab" data-view="roster">Players</button>
+      <button class="nav-tab" data-view="points">Points Table</button>
+      <button class="nav-tab" data-view="hof">🏆 Hall of Fame</button>
+      <button class="nav-tab" data-view="play" id="tab-play" style="display:none;">This Event</button>
+    </nav>
+    <div class="topbar-right">
+      <span class="pill" id="leader-pill">No points yet</span>
+      <button class="restart-btn" id="restart-btn">New / Reset Tour</button>
+    </div>
+  </header>
+  <main>
+    <section class="view active" id="view-dashboard"></section>
+    <section class="view" id="view-schedule"></section>
+    <section class="view" id="view-courses"></section>
+    <section class="view" id="view-roster"></section>
+    <section class="view" id="view-points"></section>
+    <section class="view" id="view-hof"></section>
+    <section class="view" id="view-play"></section>
+  </main>
+  <footer>V Tour Golf Simulator · saved locally in this browser</footer>
+</div>
+<div id="toast-wrap"></div>
+<div id="modal-root"></div>
+
+<script>
+(function(){
+"use strict";
+/* ============================================================
+   V TOUR — GOLF CHAMPIONSHIP SIMULATOR
+   Single-file app: data model, physics-ish shot engine (wind +
+   water hazards + player attributes + variance/luck), stroke-play
+   tournament lifecycle, seeded match-play finale, standings,
+   Hall of Fame, and all rendering. Persists to localStorage.
+   ============================================================ */
+
+/* ===== ATTRIBUTES ===== */
+const ATTRS=[
+  {key:'power',label:'Power',desc:'Distance off the tee'},
+  {key:'accuracy',label:'Accuracy',desc:'Keeping tee shots in play'},
+  {key:'irons',label:'Irons',desc:'Approach shot precision'},
+  {key:'short',label:'Short Game',desc:'Chipping & bunker recovery'},
+  {key:'putting',label:'Putting',desc:'Touch and read on the green'},
+  {key:'clutch',label:'Clutch',desc:'Composure under pressure'},
+];
+const ATTR_W={power:.16,accuracy:.18,irons:.22,short:.18,putting:.18,clutch:.08};
+function overallOf(a){let s=0;ATTRS.forEach(k=>s+=a[k.key]*ATTR_W[k.key]);return Math.round(s);}
+function tierOf(o){
+  if(o>=87)return{label:'Elite',color:'var(--turf-600)'};
+  if(o>=82)return{label:'Contender',color:'var(--board-amber)'};
+  if(o>=79)return{label:'Tour Average',color:'var(--ink-700)'};
+  return{label:'Grinder',color:'var(--ink-500)'};
+}
+
+/* ===== ROSTER (fixed 11-player field) ===== */
+const PLAYERS_SEED=[
+  {name:'Bobby B Wilfred', country:'IN', attrs:{power:90,accuracy:86,irons:90,short:87,putting:87,clutch:88}},
+  {name:'Kalyan Sudarsan', country:'IN', attrs:{power:84,accuracy:85,irons:86,short:84,putting:85,clutch:84}},
+  {name:'Amrith Krishna', country:'IN', attrs:{power:88,accuracy:82,irons:85,short:83,putting:86,clutch:83}},
+  {name:'Varun Ummapthy', country:'IN', attrs:{power:85,accuracy:81,irons:83,short:82,putting:84,clutch:81}},
+  {name:'Aravind Nayagam', country:'IN', attrs:{power:84,accuracy:82,irons:84,short:82,putting:83,clutch:82}},
+  {name:'Shyam Krishnan', country:'IN', attrs:{power:83,accuracy:81,irons:82,short:81,putting:83,clutch:81}},
+  {name:'Vignesh N', country:'IN', attrs:{power:82,accuracy:80,irons:82,short:80,putting:81,clutch:80}},
+  {name:'Yogesh V', country:'IN', attrs:{power:80,accuracy:79,irons:81,short:79,putting:80,clutch:79}},
+  {name:'Vishwajith', country:'IN', attrs:{power:81,accuracy:79,irons:80,short:79,putting:81,clutch:79}},
+  {name:'Vimal', country:'IN', attrs:{power:78,accuracy:78,irons:78,short:77,putting:79,clutch:78}},
+  {name:'PD', country:'IN', attrs:{power:76,accuracy:77,irons:77,short:77,putting:78,clutch:76}},
+];
+
+/* ===== COURSES (10 best-in-world venues: 6 USA + 4 International) ===== */
+function H(rows){return rows.map((r,i)=>({hole:i+1,par:r[0],yards:r[1],water:!!r[2]}));}
+const COURSES=[
+  {id:'peb',name:'Pebble Beach Golf Links',loc:'Pebble Beach, California',country:'USA',wind:0.85,
+    holes:H([[4,377],[5,502],[4,404],[4,331],[3,195],[5,523],[3,109],[4,428,1],[4,481,1],
+             [4,446,1],[4,384],[3,202],[4,404],[5,573],[4,397],[4,403],[3,178],[5,543,1]])},
+  {id:'saw',name:'TPC Sawgrass (Stadium Course)',loc:'Ponte Vedra Beach, Florida',country:'USA',wind:0.55,
+    holes:H([[4,394],[5,532],[3,177],[4,384],[4,466],[4,393,1],[4,442],[3,237],[5,583,1],
+             [4,461],[5,558,1],[4,358],[3,181],[4,481],[4,449],[5,507,1],[3,137,1],[4,462,1]])},
+  {id:'aug',name:'Augusta National Golf Club',loc:'Augusta, Georgia',country:'USA',wind:0.4,
+    holes:H([[4,445],[5,575],[4,350],[3,240],[4,495],[3,180],[4,450],[5,570],[4,460],
+             [4,495],[5,530,1],[3,170,1],[4,510,1],[4,440],[5,570,1],[3,180,1],[4,425],[4,465]])},
+  {id:'rmc',name:'Royal Melbourne (Composite Course)',loc:'Melbourne, Australia',country:'International',wind:0.8,
+    holes:H([[4,410],[4,400],[3,180],[4,420],[5,510,1],[4,430],[3,155],[4,410],[4,415],
+             [4,430],[3,175],[4,400],[5,505],[4,400],[3,165],[4,420],[4,410],[5,520]])},
+  {id:'sho',name:'Southern Hills Country Club',loc:'Tulsa, Oklahoma',country:'USA',wind:0.5,
+    holes:H([[4,455],[4,375],[3,205],[4,415],[4,380,1],[3,195],[5,600],[4,370],[4,435,1],
+             [4,410],[3,255],[4,400],[5,590],[4,465,1],[4,435],[3,225],[4,375],[4,395]])},
+  {id:'sun',name:'Gary Player Country Club',loc:'Sun City, South Africa',country:'International',wind:0.6,
+    holes:H([[4,420],[5,540,1],[4,435],[3,215],[4,415,1],[4,455],[3,190],[5,545],[4,430,1],
+             [4,440],[4,410],[3,205],[5,555,1],[4,450],[4,420],[4,435],[3,215],[5,545,1]])},
+  {id:'oak',name:'Oakmont Country Club',loc:'Oakmont, Pennsylvania',country:'USA',wind:0.3,
+    holes:H([[4,485],[4,350],[4,435],[4,410],[3,185],[4,395],[4,480],[3,290],[4,475],
+             [4,465],[3,300],[4,485],[5,570],[3,185],[4,450],[5,675],[4,410],[4,450]])},
+  {id:'lgn',name:'Le Golf National (Albatros Course)',loc:'Guyancourt, France',country:'International',wind:0.65,
+    holes:H([[4,410],[4,395],[3,185,1],[5,565],[4,415],[3,175,1],[4,435],[5,555],[4,420,1],
+             [4,435],[3,165],[4,410],[4,420],[5,545,1],[3,190,1],[4,420],[4,405],[4,435,1]])},
+  {id:'sta',name:'St Andrews (Old Course)',loc:'St Andrews, Scotland',country:'International',wind:0.9,
+    holes:H([[4,376,1],[4,453],[4,397],[4,480],[5,568],[4,412],[4,371],[3,175],[4,352],
+             [4,386],[3,174],[4,348],[4,465],[5,568],[4,455],[4,423],[4,455,1],[4,357,1]])},
+  {id:'pin',name:'Pinehurst No. 2',loc:'Pinehurst, North Carolina',country:'USA',wind:0.45,
+    holes:H([[4,405],[4,445],[3,195],[4,530],[5,570],[4,395],[3,180],[4,455],[4,435],
+             [4,445],[3,205],[4,415],[5,540],[4,455],[4,395],[3,235],[4,455],[4,410]])},
+];
+function getCourse(id){return COURSES.find(c=>c.id===id);}
+function courseParTotal(c){return c.holes.reduce((s,h)=>s+h.par,0);}
+function courseYardTotal(c){return c.holes.reduce((s,h)=>s+h.yards,0);}
+
+/* ===== EVENT SCHEDULE (9 stroke-play + 1 match-play finale) ===== */
+const EVENT_DEFS=[
+  {name:'Pebble Beach Pro-Classic',courseId:'peb',major:false,kind:'stroke',difficulty:1.0},
+  {name:'THE PLAYERS at Sawgrass',courseId:'saw',major:false,kind:'stroke',difficulty:1.35},
+  {name:'The Masters',courseId:'aug',major:true,kind:'stroke',difficulty:1.8},
+  {name:'Australian Open Invitational',courseId:'rmc',major:false,kind:'stroke',difficulty:1.45},
+  {name:'PGA Championship',courseId:'sho',major:true,kind:'stroke',difficulty:1.7},
+  {name:'Sun City Classic',courseId:'sun',major:false,kind:'stroke',difficulty:1.2},
+  {name:'U.S. Open',courseId:'oak',major:true,kind:'stroke',difficulty:2.6},
+  {name:'Open de France National',courseId:'lgn',major:false,kind:'stroke',difficulty:1.35},
+  {name:'The Open Championship',courseId:'sta',major:true,kind:'stroke',difficulty:2.05},
+  {name:'V TOUR Championship',courseId:'pin',major:false,kind:'final',difficulty:1.5},
+];
+const MAJOR_POINTS=[500,300,200,150,100,75,50,25,0,0,0];
+const NORMAL_POINTS=[300,150,100,75,60,50,25,10,0,0,0];
+function pointsForPosition(pos,isMajor){
+  const idx=pos-1;const table=isMajor?MAJOR_POINTS:NORMAL_POINTS;
+  return idx<table.length?table[idx]:0;
+}
+
+/* ===== HELPERS ===== */
+function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
+function gaussian(mean,sd){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return mean+Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)*sd;}
+function uid(p){return p+'_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function initialsOf(name){return name.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();}
+function avatarColor(name){let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))%360;return `hsl(${h},40%,32%)`;}
+function flagEmoji(code){return code==='USA'?'🇺🇸':code==='India'||code==='IN'?'🇮🇳':'🌍';}
+function showToast(msg,bad){
+  const wrap=document.getElementById('toast-wrap');const el=document.createElement('div');
+  el.className='toast'+(bad?' bad':'');el.textContent=msg;wrap.appendChild(el);
+  setTimeout(()=>{el.style.transition='opacity .3s';el.style.opacity='0';setTimeout(()=>el.remove(),300);},2800);
+}
+function toParStr(n){return n===0?'E':n>0?'+'+n:String(n);}
+function holeResultWord(strokes,par){const d=strokes-par;if(d<=-3)return'Albatross+';if(d===-2)return'Eagle';if(d===-1)return'Birdie';if(d===0)return'Par';if(d===1)return'Bogey';if(d===2)return'Double Bogey';return`+${d}`;}
+function lieLabel(lie){return{tee:'Tee',fairway:'Fairway',rough:'Rough',sand:'Bunker',recovery:'Trouble',green:'Green',hole:'Holed'}[lie]||lie;}
+function lieColor(lie){return{tee:'var(--turf-700)',fairway:'var(--turf-600)',rough:'#8a6d2f',sand:'var(--board-amber)',recovery:'var(--flag-red)',green:'var(--turf-700)',hole:'var(--turf-900)'}[lie]||'var(--ink-700)';}
+const WIND_LABELS=['Calm','Breezy','Windy','Blustery'];
+const WIND_MPH=[[0,5],[6,12],[13,20],[21,30]];
+function windLevelForCourse(course){
+  const p=course.wind;
+  const roll=Math.random();
+  const level=Math.round(clamp(gaussian(p*2.6,0.75),0,3));
+  return level;
+}
+function windDirDeg(){return Math.floor(Math.random()*360);}
+function windMph(level){const[a,b]=WIND_MPH[level];return Math.floor(a+Math.random()*(b-a));}
+
+/* ===== SHOT ENGINE =====
+   Full-swing / chip / bunker / putt resolution driven by player attributes,
+   course + hole difficulty, wind, and water hazards, with gaussian variance
+   standing in for the "luck" factor on every swing. */
+function interp(anchors,x){
+  if(x<=anchors[0][0])return anchors[0][1];
+  for(let i=0;i<anchors.length-1;i++){const a=anchors[i],b=anchors[i+1];if(x>=a[0]&&x<=b[0]){const f=(x-a[0])/(b[0]-a[0]);return a[1]+f*(b[1]-a[1]);}}
+  const last=anchors[anchors.length-1],prev=anchors[anchors.length-2];
+  const slope=(last[1]-prev[1])/(last[0]-prev[0]);return Math.max(.005,last[1]+slope*(x-last[0]));
+}
+const GIR_ANCHORS=[[30,.97],[50,.94],[75,.90],[100,.85],[125,.80],[150,.735],[175,.655],[200,.565],[225,.47],[250,.38],[300,.24]];
+function girK(d){if(d<=100)return .85;if(d<=150)return .65;if(d<=200)return .45;return .30;}
+const PROX_ANCHORS=[[30,8],[50,10],[75,13],[100,18],[125,22],[150,27],[175,32],[200,37],[225,42],[250,47],[300,55]];
+const PUTT_ANCHORS=[[1,.999],[2,.99],[3,.96],[4,.88],[5,.77],[6,.68],[8,.56],[10,.40],[15,.23],[20,.15],[25,.1243],[30,.07],[40,.04],[50,.03],[60,.02],[90,.008]];
+function puttK(d){if(d<=5)return .55;if(d<=10)return .45;if(d<=20)return .34;if(d<=35)return .22;return .12;}
+
+function newHoleState(holeDef){
+  return{hole:holeDef.hole,par:holeDef.par,totalYards:holeDef.yards,remaining:holeDef.yards,
+    lie:'tee',strokes:0,holedOut:false,log:[],puttDistanceFt:null,water:false};
+}
+function chooseShotType(hs){
+  if(hs.lie==='green')return'putt';
+  if(hs.lie==='sand')return hs.remaining<=40?'bunker':'approach';
+  if(hs.remaining>230)return hs.lie==='tee'?'tee_long':'long_approach';
+  if(hs.remaining>30)return'approach';
+  if(hs.remaining>0)return'chip';
+  return'putt';
+}
+function resolveFullSwing(hs,attrs,shotType,difficulty,windLvl,hazard){
+  windLvl=windLvl||0;
+  const{power,accuracy,irons}=attrs;let res={};
+  if(shotType==='tee_long'){
+    const distPotential=80+power*2.85;const distActual=clamp(gaussian(distPotential,14+windLvl*2),190,365);
+    const fairwayPct=clamp(53+(accuracy-73)*1.5-difficulty*1.3-windLvl*1.6,15,90);
+    const accRoll=Math.random()*100;let newLie='fairway';
+    if(accRoll>fairwayPct)newLie='rough';
+    if(accRoll>fairwayPct+30)newLie='recovery';
+    if(newLie==='recovery'&&hazard&&Math.random()<0.5){
+      hs.strokes+=1;newLie='rough';hs.remaining=clamp(hs.remaining-distActual*0.55,60,hs.totalYards*0.6);hs.lie=newLie;hs.water=true;
+      res.text=`Drive ${Math.round(distActual)}y — 💦 splashes into the water, penalty stroke, re-drops in the ${newLie}.`;
+      return res;
+    }
+    hs.remaining=clamp(hs.remaining-distActual,0,9999);hs.lie=hs.remaining<=0?'green':newLie;
+    res.text=`Drive ${Math.round(distActual)}y — ${newLie==='fairway'?'finds the fairway':newLie==='rough'?'drifts into the rough':'leaks into trouble'}.`;
+  } else {
+    const lieFactor=(hs.lie==='fairway'?1.0:hs.lie==='rough'?.78:hs.lie==='recovery'?.5:.6);
+    const skillP=clamp(irons/99,.4,1.1);const dist=hs.remaining;
+    let girChance=(interp(GIR_ANCHORS,dist)+(skillP-.79)*girK(dist))*lieFactor-difficulty*.015-windLvl*.01;
+    girChance=clamp(girChance,.01,.98);
+    if(Math.random()<girChance){
+      hs.remaining=0;hs.lie='green';
+      const proxBase=interp(PROX_ANCHORS,dist)*(1-(skillP-.79)*.5)+difficulty*1.2+windLvl*1;
+      hs.puttDistanceFt=clamp(Math.round(gaussian(proxBase,proxBase*.5+1)),1,90);
+      res.text=`Approach finds the green, ${hs.puttDistanceFt} ft from the pin.`;
+    } else {
+      const distPotential=dist*(.90+skillP*.09);
+      const distActual=clamp(gaussian(distPotential,dist*.16+windLvl*3),dist*.35,Math.min(dist*1.15,280));
+      const leftover=clamp(dist-distActual,dist*.03,dist*.9);
+      const qualityRoll=Math.random()*100+(irons-50)*.4-difficulty*3.2-windLvl*2;
+      let newLie;
+      if(qualityRoll>62)newLie='fairway';else if(qualityRoll>32)newLie='rough';
+      else if(qualityRoll>20)newLie='sand';else newLie='recovery';
+      if(newLie==='recovery'&&hazard&&Math.random()<0.5){
+        hs.strokes+=1;hs.remaining=clamp(leftover*0.6,15,dist*0.6);hs.lie='rough';hs.water=true;
+        res.text=`Shot comes up short — 💦 finds the water, penalty stroke, drops back to ${Math.round(hs.remaining)}y.`;
+        return res;
+      }
+      hs.remaining=leftover;hs.lie=newLie;
+      res.text=`Shot leaves ${Math.round(leftover)}y remaining, into the ${newLie}.`;
+    }
+  }
+  return res;
+}
+function resolveChip(hs,attrs,difficulty){
+  difficulty=difficulty||0;const skillP=attrs.short/99;const dist=hs.remaining;
+  const closenessBase=clamp(14-skillP*10+difficulty*2,1.5,26);const closeness=clamp(gaussian(closenessBase+dist*.04,6),.5,50);
+  const chipInChance=clamp((dist<25?(.05+skillP*.12):.01)-difficulty*.008,.002,.2);
+  if(Math.random()<chipInChance){hs.holedOut=true;hs.lie='hole';return{text:'Chips it in! 🎯',holed:true};}
+  hs.remaining=0;hs.lie='green';hs.puttDistanceFt=Math.round(closeness);
+  return{text:`Chips on, ${hs.puttDistanceFt} ft for the putt.`};
+}
+function resolveBunker(hs,attrs,difficulty){
+  difficulty=difficulty||0;const skillP=attrs.short/99;const closeness=clamp(gaussian(16-skillP*10+difficulty*2,7),1,45);
+  if(Math.random()<clamp(.04+(1-skillP)*.05+difficulty*.015,.02,.22)){hs.remaining=clamp(hs.remaining*.4,5,60);return{text:'Leaves it in the sand — still in the bunker.'};}
+  hs.remaining=0;hs.lie='green';hs.puttDistanceFt=Math.round(closeness);return{text:`Splashes out to ${hs.puttDistanceFt} ft.`};
+}
+function resolvePutt(hs,attrs,difficulty,windLvl){
+  difficulty=difficulty||0;windLvl=windLvl||0;
+  const skillP=attrs.putting/99;const clutchP=attrs.clutch/99;const distFt=hs.puttDistanceFt;
+  let makeChance=interp(PUTT_ANCHORS,distFt)+(skillP-.79)*puttK(distFt)+(clutchP-.5)*.03-difficulty*.02-windLvl*.008;
+  makeChance=clamp(makeChance,.005,.995);
+  if(Math.random()<makeChance){
+    hs.holedOut=true;hs.lie='hole';
+    const flavor=distFt>20?'Bomb from distance — in the cup!':distFt>8?'Rolls in!':'Good putt, in the heart.';
+    return{text:flavor,holed:true};
+  }
+  const leaveBase=(distFt>20?distFt*.20:distFt>8?distFt*.26:distFt*.32)*(1+difficulty*.04);
+  const leave=clamp(gaussian(leaveBase,leaveBase*.4+.5),.3,distFt*.95);
+  hs.puttDistanceFt=Math.round(leave*10)/10;
+  return{text:`Just slides by, ${hs.puttDistanceFt} ft left.`};
+}
+function playShot(hs,attrs,difficulty,windLvl,hazard){
+  difficulty=difficulty||0;windLvl=windLvl||0;
+  hs.strokes+=1;const shotType=chooseShotType(hs);let res;
+  if(shotType==='tee_long')res=resolveFullSwing(hs,attrs,'tee_long',difficulty,windLvl,hazard);
+  else if(shotType==='approach'||shotType==='long_approach')res=resolveFullSwing(hs,attrs,shotType,difficulty,windLvl,hazard);
+  else if(shotType==='chip')res=resolveChip(hs,attrs,difficulty);
+  else if(shotType==='bunker')res=resolveBunker(hs,attrs,difficulty);
+  else res=resolvePutt(hs,attrs,difficulty,windLvl);
+  res.shotType=shotType;res.strokeNum=hs.strokes;hs.log.push(res.text);
+  if(hs.strokes>=12&&!hs.holedOut){hs.holedOut=true;res.text+=' Picks up — max score.';}
+  return res;
+}
+function simulateFullHole(holeDef,attrs,difficulty,windLvl){
+  const hs=newHoleState(holeDef);
+  while(!hs.holedOut)playShot(hs,attrs,difficulty,windLvl,holeDef.water);
+  return hs;
+}
+function effectiveAttrs(player,roundLuck){
+  // Dynamic form: recent results vs field bump/dent attributes slightly.
+  // roundLuck: a per-player, per-round "day" value (see rollRoundLuck()) that
+  // shifts every attribute together — a hot putter/ball-striking day can let
+  // a lower-rated player outplay a higher-rated one, exactly like real golf.
+  const form=playerFormScore(player.id);
+  const luck=typeof roundLuck==='number'?roundLuck:0;
+  const out={};ATTRS.forEach(a=>{
+    let v=player.attrs[a.key]+form*2.5+luck*5.5;
+    out[a.key]=clamp(Math.round(v),1,99);
+  });
+  return out;
+}
+function rollRoundLuck(){return clamp(gaussian(0,1),-2.3,2.3);}
+const FORM_WINDOW=4;
+function playerFormScore(pid){
+  const st=STATE.standings[pid];if(!st||!st.history||!st.history.length)return 0;
+  const recent=st.history.slice(-FORM_WINDOW);
+  let w=0,tw=0;
+  recent.forEach((h,i)=>{const rel=-(h.toParVsField||0);const weight=1+i*.15;w+=rel*weight;tw+=weight;});
+  return clamp((tw?w/tw:0)/4,-1,1);
+}
+function formLabel(score){
+  if(score>=.5)return{label:'🔥 Red Hot',color:'var(--flag-red)'};
+  if(score>=.18)return{label:'On Form',color:'var(--turf-600)'};
+  if(score<=-.5)return{label:'🧊 Ice Cold',color:'var(--ink-500)'};
+  if(score<=-.18)return{label:'Off Form',color:'var(--ink-500)'};
+  return{label:'Steady',color:'var(--ink-700)'};
+}
+
+/* ===== STATE / STORAGE ===== */
+const STORAGE_KEY='vtour_save_v1';
+let STATE=null;
+function freshState(){
+  const players=PLAYERS_SEED.map(p=>({id:uid('p'),name:p.name,country:p.country,attrs:{...p.attrs}}));
+  const standings={};players.forEach(p=>standings[p.id]={points:0,history:[]});
+  return{
+    tourNumber:1,
+    players,
+    standings,
+    events:EVENT_DEFS.map((d,i)=>({
+      id:'ev_'+i,idx:i,name:d.name,courseId:d.courseId,major:d.major,kind:d.kind,difficulty:d.difficulty,
+      status:i===0?'current':'upcoming',rounds:[],results:null,bracket:null,
+    })),
+    tourChampionId:null,championGolferId:null,
+    hallOfFame:{majors:[],tourChampions:[],champions:[]},
+  };
+}
+function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(STATE));}catch(e){}}
+function loadState(){
+  try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return JSON.parse(raw);}catch(e){}
+  return null;
+}
+function getPlayer(id){return STATE.players.find(p=>p.id===id);}
+function getEvent(idx){return STATE.events[idx];}
+function currentEventIdx(){const i=STATE.events.findIndex(e=>e.status==='current');return i===-1?STATE.events.findIndex(e=>e.status==='upcoming'):i;}
+
+/* ===== STROKE-PLAY LIFECYCLE ===== */
+function ensureRounds(ev){
+  if(ev.rounds&&ev.rounds.length===4)return;
+  const course=getCourse(ev.courseId);
+  ev.rounds=[0,1,2,3].map(()=>{
+    const scores={};const luck={};STATE.players.forEach(p=>{scores[p.id]=new Array(18).fill(null);luck[p.id]=rollRoundLuck();});
+    return{windLevel:windLevelForCourse(course),windDir:windDirDeg(),scores,luck};
+  });
+}
+function roundComplete(ev,ri){return STATE.players.every(p=>ev.rounds[ri].scores[p.id].every(v=>v!=null));}
+function nextOpenHole(ev,ri,pid){const arr=ev.rounds[ri].scores[pid];for(let i=0;i<18;i++)if(arr[i]==null)return i;return -1;}
+function playerRoundTotal(ev,ri,pid){return ev.rounds[ri].scores[pid].reduce((s,v)=>s+(v||0),0);}
+function playerThru(ev,ri,pid){return ev.rounds[ri].scores[pid].filter(v=>v!=null).length;}
+
+function simulateHoleAllPlayers(ev,ri,hi){
+  const course=getCourse(ev.courseId);const holeDef=course.holes[hi];const rnd=ev.rounds[ri];
+  STATE.players.forEach(p=>{
+    if(rnd.scores[p.id][hi]!=null)return;
+    const hs=simulateFullHole(holeDef,effectiveAttrs(p,rnd.luck&&rnd.luck[p.id]),ev.difficulty,rnd.windLevel);
+    rnd.scores[p.id][hi]=hs.strokes;
+  });
+}
+function simulateRestOfRound(ev,ri,skipPid){
+  for(let hi=0;hi<18;hi++){
+    const course=getCourse(ev.courseId);const holeDef=course.holes[hi];const rnd=ev.rounds[ri];
+    STATE.players.forEach(p=>{
+      if(skipPid&&p.id===skipPid)return;
+      if(rnd.scores[p.id][hi]!=null)return;
+      const hs=simulateFullHole(holeDef,effectiveAttrs(p,rnd.luck&&rnd.luck[p.id]),ev.difficulty,rnd.windLevel);
+      rnd.scores[p.id][hi]=hs.strokes;
+    });
+  }
+}
+function simulateEntireEvent(ev){
+  ensureRounds(ev);
+  for(let ri=0;ri<4;ri++)simulateRestOfRound(ev,ri,null);
+  finishEventIfDone(ev);
+}
+function totalStrokesThrough(ev,pid,uptoRound){
+  let s=0;for(let ri=0;ri<=uptoRound;ri++)s+=playerRoundTotal(ev,ri,pid);return s;
+}
+function computeLeaderboard(ev){
+  const par=courseParTotal(getCourse(ev.courseId));
+  const lastPlayedRound=ev.rounds.reduce((acc,r,ri)=>STATE.players.some(p=>playerThru(ev,ri,p.id)>0)?ri:acc,0);
+  const rows=STATE.players.map(p=>{
+    let total=0,thru=0,roundsPlayed=0;
+    for(let ri=0;ri<4;ri++){
+      const t=playerThru(ev,ri,p.id);
+      if(t>0){total+=playerRoundTotal(ev,ri,p.id);roundsPlayed++;if(ri===lastPlayedRound)thru=t;}
+    }
+    return{pid:p.id,name:p.name,total,toPar:total-par*roundsPlayed,roundsPlayed,thru:roundsPlayed<4?thru:18};
+  });
+  rows.sort((a,b)=>a.toPar-b.toPar);
+  let pos=1;rows.forEach((r,i)=>{if(i>0&&r.toPar===rows[i-1].toPar)r.pos=rows[i-1].pos;else r.pos=pos;pos=i+2;});
+  return rows;
+}
+function finishEventIfDone(ev){
+  if(!ev.rounds.every((r,ri)=>roundComplete(ev,ri)))return false;
+  const lb=computeLeaderboard(ev);
+  ev.results=lb;ev.status='complete';ev.winnerId=lb[0].pid;
+  lb.forEach(r=>{
+    const st=STATE.standings[r.pid];
+    const pts=pointsForPosition(r.pos,ev.major);
+    st.points+=pts;
+    st.history.push({eventIdx:ev.idx,eventName:ev.name,pos:r.pos,points:pts,toPar:r.toPar,toParVsField:r.toPar-avgFieldToPar(lb)});
+  });
+  if(ev.major){
+    STATE.hallOfFame.majors.push({tour:STATE.tourNumber,event:ev.name,course:getCourse(ev.courseId).name,winnerId:lb[0].pid,winnerName:getPlayer(lb[0].pid).name,toPar:lb[0].toPar});
+  }
+  // advance to next event
+  const nextIdx=ev.idx+1;
+  if(nextIdx<STATE.events.length){
+    STATE.events[nextIdx].status='current';
+    if(nextIdx===9)buildFinaleBracket();
+  }
+  if(ev.idx===8){ // after event 9 (index 8) -> crown Tour Champion
+    const ranked=STATE.players.slice().sort((a,b)=>(STATE.standings[b.id].points||0)-(STATE.standings[a.id].points||0));
+    STATE.tourChampionId=ranked[0].id;
+    STATE.hallOfFame.tourChampions.push({tour:STATE.tourNumber,championId:ranked[0].id,championName:ranked[0].name,points:STATE.standings[ranked[0].id].points});
+  }
+  saveState();
+  return true;
+}
+function avgFieldToPar(lb){const s=lb.reduce((a,r)=>a+r.toPar,0);return s/lb.length;}
+
+/* ===== MATCH-PLAY FINALE (Event 10 · V TOUR Championship) ===== */
+function buildFinaleBracket(){
+  const ev=STATE.events[9];
+  const ranked=STATE.players.slice().sort((a,b)=>(STATE.standings[b.id].points||0)-(STATE.standings[a.id].points||0));
+  const seeds=ranked.slice(0,8).map(p=>p.id);
+  const pairs=[[0,7],[3,4],[2,5],[1,6]]; // standard 8-seed bracket
+  const qf={name:'Quarterfinals',holes:18,matches:pairs.map(([ia,ib])=>newMatch(seeds[ia],ia+1,seeds[ib],ib+1,18))};
+  ev.bracket={seeds,rounds:[qf],champion:null,runnerUp:null};
+  ev.status='current';
+  saveState();
+}
+function newMatch(pidA,seedA,pidB,seedB,holes){
+  return{pidA,seedA,pidB,seedB,holes,played:0,aUp:0,log:[],status:'pending',winnerId:null,resultText:null,
+    luckA:rollRoundLuck(),luckB:rollRoundLuck()};
+}
+function matchCourse(){return getCourse(getEvent(9).courseId);}
+function simulateMatchHole(m,windLevel,difficulty){
+  const course=matchCourse();const holeIdx=m.played%18;const holeDef=course.holes[holeIdx];
+  const pA=getPlayer(m.pidA),pB=getPlayer(m.pidB);
+  const hsA=simulateFullHole(holeDef,effectiveAttrs(pA,m.luckA),difficulty,windLevel);
+  const hsB=simulateFullHole(holeDef,effectiveAttrs(pB,m.luckB),difficulty,windLevel);
+  m.played++;
+  let winner='halve';
+  if(hsA.strokes<hsB.strokes){winner='A';m.aUp++;}
+  else if(hsB.strokes<hsA.strokes){winner='B';m.aUp--;}
+  const holesLeft=m.holes-m.played;
+  m.log.push({hole:holeIdx+1,par:holeDef.par,strokesA:hsA.strokes,strokesB:hsB.strokes,winner});
+  // clinch check
+  if(Math.abs(m.aUp)>holesLeft){
+    m.status='complete';m.winnerId=m.aUp>0?m.pidA:m.pidB;
+    const upBy=Math.abs(m.aUp);m.resultText=`${upBy}${holesLeft>0?'&'+holesLeft:' up (no more holes)'}`;
+  } else if(m.played>=m.holes){
+    if(m.aUp!==0){m.status='complete';m.winnerId=m.aUp>0?m.pidA:m.pidB;m.resultText='1 up';}
+    else{ // sudden death
+      m.status='playoff';
+    }
+  } else if(m.status==='pending'){m.status='in_progress';}
+  return{hsA,hsB,winner};
+}
+function simulateMatchPlayoffHole(m,windLevel,difficulty){
+  const course=matchCourse();const holeIdx=m.played%18;const holeDef=course.holes[holeIdx];
+  const pA=getPlayer(m.pidA),pB=getPlayer(m.pidB);
+  const hsA=simulateFullHole(holeDef,effectiveAttrs(pA,m.luckA),difficulty,windLevel);
+  const hsB=simulateFullHole(holeDef,effectiveAttrs(pB,m.luckB),difficulty,windLevel);
+  m.played++;
+  if(hsA.strokes<hsB.strokes){m.status='complete';m.winnerId=m.pidA;m.resultText='won in sudden death';}
+  else if(hsB.strokes<hsA.strokes){m.status='complete';m.winnerId=m.pidB;m.resultText='won in sudden death';}
+  m.log.push({hole:holeIdx+1,par:holeDef.par,strokesA:hsA.strokes,strokesB:hsB.strokes,winner:m.status==='complete'?(m.winnerId===m.pidA?'A':'B'):'halve',playoff:true});
+  return{hsA,hsB};
+}
+function simulateWholeMatch(m){
+  const course=matchCourse();const wl=windLevelForCourse(course);const diff=getEvent(9).difficulty;
+  while(m.status!=='complete'){
+    if(m.status==='playoff')simulateMatchPlayoffHole(m,wl,diff);
+    else simulateMatchHole(m,wl,diff);
+  }
+}
+function finaleAdvanceIfNeeded(){
+  const ev=STATE.events[9];const br=ev.bracket;if(!br)return;
+  const curRound=br.rounds[br.rounds.length-1];
+  if(!curRound.matches.every(m=>m.status==='complete'))return;
+  if(curRound.name==='Quarterfinals'){
+    const winners=curRound.matches.map(m=>({id:m.winnerId,seed:m.pidA===m.winnerId?m.seedA:m.seedB}));
+    const sf={name:'Semifinals',holes:18,matches:[
+      newMatch(winners[0].id,winners[0].seed,winners[1].id,winners[1].seed,18),
+      newMatch(winners[2].id,winners[2].seed,winners[3].id,winners[3].seed,18),
+    ]};
+    br.rounds.push(sf);
+  } else if(curRound.name==='Semifinals'){
+    const winners=curRound.matches.map(m=>({id:m.winnerId,seed:m.pidA===m.winnerId?m.seedA:m.seedB}));
+    const final={name:'Final · 36 Holes',holes:36,matches:[newMatch(winners[0].id,winners[0].seed,winners[1].id,winners[1].seed,36)]};
+    br.rounds.push(final);
+  } else if(curRound.name.indexOf('Final')===0){
+    const m=curRound.matches[0];
+    br.champion=m.winnerId;br.runnerUp=m.winnerId===m.pidA?m.pidB:m.pidA;
+    ev.status='complete';ev.winnerId=m.winnerId;
+    STATE.championGolferId=m.winnerId;
+    STATE.hallOfFame.champions.push({tour:STATE.tourNumber,championId:m.winnerId,championName:getPlayer(m.winnerId).name,runnerUpId:br.runnerUp,runnerUpName:getPlayer(br.runnerUp).name});
+  }
+  saveState();
+}
+
+/* ===== HALL OF FAME AGGREGATES ===== */
+function hofCounts(){
+  const map={};STATE.players.forEach(p=>map[p.name]={majors:0,tourChamps:0,champGolfer:0});
+  STATE.hallOfFame.majors.forEach(m=>{if(!map[m.winnerName])map[m.winnerName]={majors:0,tourChamps:0,champGolfer:0};map[m.winnerName].majors++;});
+  STATE.hallOfFame.tourChampions.forEach(t=>{if(!map[t.championName])map[t.championName]={majors:0,tourChamps:0,champGolfer:0};map[t.championName].tourChamps++;});
+  STATE.hallOfFame.champions.forEach(c=>{if(!map[c.championName])map[c.championName]={majors:0,tourChamps:0,champGolfer:0};map[c.championName].champGolfer++;});
+  return map;
+}
+
+/* ===== SVG HOLE VISUAL ===== */
+function seededRand(seed){let x=Math.sin(seed*999)*10000;return x-Math.floor(x);}
+function buildHoleSVG(course,holeDef,hs,windLevel,windDir){
+  const W=260,Hh=420;
+  const seed=course.id.length*7+holeDef.hole;
+  const progress=hs?clamp(1-(hs.remaining/holeDef.yards),0,1):0;
+  const isGreen=hs&&hs.lie==='green';
+  const fairwayTopW=holeDef.par===3?70:holeDef.par===5?60:66;
+  const fairwayBotW=holeDef.par===3?50:80;
+  const teeY=Hh-30,greenY=48;
+  const bendX=W/2+(seededRand(seed)-0.5)*70;
+  const midY=(teeY+greenY)/2;
+  const leftEdgeTop=W/2-fairwayTopW/2,rightEdgeTop=W/2+fairwayTopW/2;
+  const leftEdgeBot=W/2-fairwayBotW/2,rightEdgeBot=W/2+fairwayBotW/2;
+  const fairwayPath=`M${leftEdgeBot},${teeY} Q${bendX-30},${midY} ${leftEdgeTop},${greenY} L${rightEdgeTop},${greenY} Q${bendX+30},${midY} ${rightEdgeBot},${teeY} Z`;
+  const bunkers=[];
+  for(let i=0;i<2;i++){
+    const t=0.3+i*0.35+seededRand(seed+i)*0.1;
+    const y=teeY-(teeY-greenY)*t;
+    const side=seededRand(seed+i+10)>0.5?1:-1;
+    const x=W/2+side*(fairwayTopW/2+18+seededRand(seed+i)*20);
+    bunkers.push({x,y});
+  }
+  const waterBlob=holeDef.water?`<ellipse cx="${W/2+(seededRand(seed+50)-0.5)*90}" cy="${greenY+55}" rx="46" ry="24" fill="var(--water-blue)" opacity="0.75"/>`:'';
+  let ballX=W/2,ballY=teeY;
+  if(hs){
+    ballY=teeY-(teeY-greenY)*progress;
+    const lieOffset=hs.lie==='rough'?26:hs.lie==='sand'?32:hs.lie==='recovery'?40:0;
+    const side=seededRand(seed+hs.strokes)>0.5?1:-1;
+    ballX=W/2+(hs.lie==='fairway'||hs.lie==='green'||hs.lie==='hole'?0:side*lieOffset*(1-progress*0.3));
+  }
+  const windLabel=WIND_LABELS[windLevel||0];
+  const arrowLen=14+((windLevel||0)*7);
+  const rad=((windDir||0)-90)*Math.PI/180;
+  const ax2=W-40+Math.cos(rad)*arrowLen,ay2=34+Math.sin(rad)*arrowLen;
+  return `<svg viewBox="0 0 ${W} ${Hh}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:260px;display:block;margin:0 auto;">
+    <rect x="0" y="0" width="${W}" height="${Hh}" fill="#dce6c9" rx="10"/>
+    <path d="${fairwayPath}" fill="#8fbf7a" stroke="#6fa25c" stroke-width="2"/>
+    <ellipse cx="${W/2}" cy="${greenY}" rx="${fairwayTopW/2+16}" ry="26" fill="#a9d98f" stroke="#6fa25c" stroke-width="2"/>
+    ${bunkers.map(b=>`<ellipse cx="${b.x}" cy="${b.y}" rx="12" ry="8" fill="#e3d09a" stroke="#c9b46f" stroke-width="1"/>`).join('')}
+    ${waterBlob}
+    <circle cx="${W/2}" cy="${greenY}" r="3" fill="#a8362a"/>
+    <line x1="${W/2}" y1="${greenY}" x2="${W/2}" y2="${greenY-16}" stroke="#a8362a" stroke-width="2"/>
+    <path d="M${W/2},${greenY-16} L${W/2+10},${greenY-12} L${W/2},${greenY-8} Z" fill="#a8362a"/>
+    <rect x="${W/2-10}" y="${teeY-4}" width="20" height="8" rx="3" fill="#3a463d"/>
+    ${hs?`<circle cx="${ballX}" cy="${ballY}" r="5" fill="#fff" stroke="#141d17" stroke-width="1.4"/>`:''}
+    <g transform="translate(${W-52},20)">
+      <line x1="0" y1="16" x2="${(ax2-(W-40))}" y2="${(ay2-34)}" stroke="#3d6f96" stroke-width="2.4" marker-end="url(#arrowhead)"/>
+    </g>
+    <defs><marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3d6f96"/></marker></defs>
+    <text x="${W-52}" y="52" font-size="10" fill="#3d6f96" text-anchor="middle" font-family="Barlow Condensed, sans-serif" font-weight="700">${windLabel}</text>
+  </svg>`;
+}
+
+/* ===== PLAY UI STATE (interactive focus player) =====
+   holeStates caches each player's in-progress shot state by playerId, so
+   switching focus to a different player before they've holed out doesn't
+   wipe the shots they've already hit — same as real golf, players in a
+   group take turns rather than one finishing the hole in isolation.
+   PLAY.hs is kept as a convenience alias for whichever player is currently
+   focused; it always points at that player's entry in holeStates. */
+const PLAY={focusPid:null,hs:null,holeIdx:0,holeStates:{}};
+function setPlayHoleState(pid,state){
+  PLAY.hs=state;
+  if(state)PLAY.holeStates[pid]=state;
+  else delete PLAY.holeStates[pid];
+}
+
+/* ===== RENDERING ===== */
+const VIEWS=['dashboard','schedule','courses','roster','points','hof','play'];
+function switchView(v){
+  VIEWS.forEach(id=>document.getElementById('view-'+id).classList.toggle('active',id===v));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));
+  renderView(v);
+}
+function renderView(v){
+  if(v==='dashboard')renderDashboard();
+  else if(v==='schedule')renderSchedule();
+  else if(v==='courses')renderCourses();
+  else if(v==='roster')renderRoster();
+  else if(v==='points')renderPoints();
+  else if(v==='hof')renderHOF();
+  else if(v==='play')renderPlay();
+}
+function refreshTopbar(){
+  const ci=currentEventIdx();
+  document.getElementById('tour-label-top').textContent=`Tour ${STATE.tourNumber} · Event ${ci===-1?10:ci+1} of 10`;
+  const anyStarted=STATE.players.some(p=>STATE.standings[p.id].points>0);
+  const ranked=STATE.players.slice().sort((a,b)=>STATE.standings[b.id].points-STATE.standings[a.id].points);
+  let pillTxt='No points yet';
+  if(STATE.championGolferId)pillTxt=`🏌️ Champion Golfer: ${getPlayer(STATE.championGolferId).name}`;
+  else if(STATE.tourChampionId)pillTxt=`👑 Tour Champion: ${getPlayer(STATE.tourChampionId).name}`;
+  else if(anyStarted)pillTxt=`Leader: ${ranked[0].name} · ${ranked[0].id&&STATE.standings[ranked[0].id].points} pts`;
+  document.getElementById('leader-pill').textContent=pillTxt;
+  const finaleReached=STATE.events[9].status!=='upcoming';
+  document.getElementById('tab-play').style.display=(ci!==-1||finaleReached)?'':'none';
+}
+
+/* ---- Dashboard ---- */
+function renderDashboard(){
+  const el=document.getElementById('view-dashboard');
+  const ranked=STATE.players.slice().sort((a,b)=>STATE.standings[b.id].points-STATE.standings[a.id].points);
+  const ci=currentEventIdx();
+  const curEv=ci!==-1?STATE.events[ci]:null;
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">V Tour · Tour ${STATE.tourNumber}</span><h2>Dashboard</h2></div></div>
+  <div class="grid cols-3" style="margin-bottom:16px;">
+    <div class="card" style="padding:18px;border-left:4px solid var(--board-amber);">
+      <div class="eyebrow">Tour Champion</div>
+      <h3 style="font-size:20px;margin-top:4px;">${STATE.tourChampionId?'👑 '+escapeHTML(getPlayer(STATE.tourChampionId).name):'Decided after Event 9'}</h3>
+      <p style="font-size:12px;color:var(--ink-500);margin-top:6px;">Awarded to the season points leader once the Open Championship (Event 9) wraps up.</p>
+    </div>
+    <div class="card" style="padding:18px;border-left:4px solid var(--flag-red);">
+      <div class="eyebrow">Champion Golfer of the Year</div>
+      <h3 style="font-size:20px;margin-top:4px;">${STATE.championGolferId?'🏆 '+escapeHTML(getPlayer(STATE.championGolferId).name):'Decided at the V TOUR Championship'}</h3>
+      <p style="font-size:12px;color:var(--ink-500);margin-top:6px;">Winner of the 36-hole match-play final among the top 8 seeds.</p>
+    </div>
+    <div class="card" style="padding:18px;border-left:4px solid var(--turf-600);">
+      <div class="eyebrow">${curEv?(curEv.status==='current'?'Now Playing':'Up Next'):'Tour Complete'}</div>
+      <h3 style="font-size:20px;margin-top:4px;">${curEv?escapeHTML(curEv.name):'All 10 events finished'}</h3>
+      <p style="font-size:12px;color:var(--ink-500);margin-top:6px;">${curEv?escapeHTML(getCourse(curEv.courseId).name)+' · '+getCourse(curEv.courseId).loc:'Start a new tour to play again.'}</p>
+      ${curEv?`<button class="btn amber btn-sm" style="margin-top:10px;" id="dash-go-play">Go to This Event</button>`:''}
+    </div>
+  </div>
+  <div class="grid cols-2">
+    <div class="card" style="padding:18px;">
+      <div class="eyebrow" style="margin-bottom:8px;">Points Table (Top 5)</div>
+      ${ranked.slice(0,5).map((p,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;${i<4?'border-bottom:1px solid var(--line);':''}">
+        <span class="num" style="width:20px;color:var(--ink-500);">${i+1}</span>
+        <span class="avatar" style="width:26px;height:26px;font-size:10px;background:${avatarColor(p.name)};">${initialsOf(p.name)}</span>
+        <span style="flex:1;font-size:13.5px;">${escapeHTML(p.name)}</span>
+        <span class="num" style="font-size:15px;">${STATE.standings[p.id].points.toLocaleString()}</span>
+      </div>`).join('')}
+    </div>
+    <div class="card" style="padding:18px;">
+      <div class="eyebrow" style="margin-bottom:8px;">Schedule Progress</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">
+        ${STATE.events.map(e=>`<span class="badge status-${e.status}" title="${escapeHTML(e.name)}">${e.idx+1}${e.major?' ★':''}${e.kind==='final'?' 🏁':''}</span>`).join('')}
+      </div>
+      <p style="font-size:11px;color:var(--ink-500);margin-top:10px;">★ = Major championship (4 rounds stroke play) · 🏁 = V TOUR Championship (match play finale)</p>
+    </div>
+  </div>`;
+  document.getElementById('dash-go-play')?.addEventListener('click',()=>switchView('play'));
+}
+
+/* ---- Schedule ---- */
+function renderSchedule(){
+  const el=document.getElementById('view-schedule');
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">The Calendar</span><h2>Schedule</h2></div></div>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+  ${STATE.events.map(ev=>{
+    const course=getCourse(ev.courseId);
+    const winner=ev.kind==='stroke'?(ev.winnerId?getPlayer(ev.winnerId):null):(ev.bracket&&ev.bracket.champion?getPlayer(ev.bracket.champion):null);
+    return `<div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div class="num" style="font-size:26px;color:var(--ink-500);width:34px;">${ev.idx+1}</div>
+      <div style="flex:1;min-width:220px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <h3 style="font-size:16px;">${escapeHTML(ev.name)}</h3>
+          ${ev.major?'<span class="badge major">Major</span>':''}
+          ${ev.kind==='final'?'<span class="badge major" style="background:rgba(168,54,42,.15);color:var(--flag-red);border-color:rgba(168,54,42,.4);">Match Play Finale</span>':''}
+          <span class="badge status-${ev.status}">${ev.status}</span>
+        </div>
+        <div style="font-size:12.5px;color:var(--ink-500);margin-top:3px;">${flagEmoji(course.country==='USA'?'USA':'IN')} ${escapeHTML(course.name)} · ${escapeHTML(course.loc)} · Par ${courseParTotal(course)}</div>
+      </div>
+      <div style="text-align:right;min-width:160px;">
+        ${winner?`<div class="eyebrow">Winner</div><div style="font-family:'Oswald',sans-serif;font-size:15px;">${escapeHTML(winner.name)}</div>`:
+          ev.status==='current'?`<button class="btn amber btn-sm" data-goto-play>Enter Event</button>`:`<span style="font-size:12px;color:var(--ink-500);">Not yet reached</span>`}
+      </div>
+    </div>`;
+  }).join('')}
+  </div>`;
+  el.querySelectorAll('[data-goto-play]').forEach(b=>b.addEventListener('click',()=>switchView('play')));
+}
+
+/* ---- Courses ---- */
+function renderCourses(){
+  const el=document.getElementById('view-courses');
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">10 Best Courses In The World</span><h2>Courses</h2></div>
+    <div class="eyebrow">6 USA · 4 International</div></div>
+  <div class="grid auto">
+  ${COURSES.map(c=>{
+    const par=courseParTotal(c),yards=courseYardTotal(c);
+    const waterHoles=c.holes.filter(h=>h.water).length;
+    const windLabel=c.wind>=0.75?'High':c.wind>=0.55?'Medium-High':c.wind>=0.4?'Medium':'Low';
+    const ev=EVENT_DEFS.find(e=>e.courseId===c.id);
+    return `<div class="card" style="padding:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="eyebrow">${c.country}</div>
+          <h3 style="font-size:16px;margin-top:2px;">${escapeHTML(c.name)}</h3>
+          <div style="font-size:12px;color:var(--ink-500);">${escapeHTML(c.loc)}</div>
+        </div>
+        ${ev&&ev.major?'<span class="badge major">Major Venue</span>':''}
+      </div>
+      <div style="display:flex;gap:14px;margin-top:12px;font-size:12.5px;">
+        <div><div class="eyebrow">Par</div><div class="num" style="font-size:17px;">${par}</div></div>
+        <div><div class="eyebrow">Yards</div><div class="num" style="font-size:17px;">${yards.toLocaleString()}</div></div>
+        <div><div class="eyebrow">Wind</div><div class="num" style="font-size:17px;">${windLabel}</div></div>
+        <div><div class="eyebrow">Water Holes</div><div class="num" style="font-size:17px;">${waterHoles}</div></div>
+      </div>
+      <button class="btn ghost btn-sm" style="margin-top:12px;" data-course-detail="${c.id}">View Scorecard</button>
+    </div>`;
+  }).join('')}
+  </div>`;
+  el.querySelectorAll('[data-course-detail]').forEach(b=>b.addEventListener('click',()=>openCourseModal(b.dataset.courseDetail)));
+}
+function openCourseModal(cid){
+  const c=getCourse(cid);const root=document.getElementById('modal-root');
+  root.innerHTML=`<div class="modal-overlay" id="cm-overlay"><div class="modal"><div class="modal-pad">
+    <h3>${escapeHTML(c.name)}</h3>
+    <div class="modal-sub">${escapeHTML(c.loc)} · Par ${courseParTotal(c)} · ${courseYardTotal(c).toLocaleString()} yards</div>
+    <table><thead><tr><th>Hole</th><th>Par</th><th>Yards</th><th>Hazard</th></tr></thead><tbody>
+    ${c.holes.map(h=>`<tr><td>${h.hole}</td><td>${h.par}</td><td>${h.yards}</td><td>${h.water?'<span class="badge water">Water</span>':'—'}</td></tr>`).join('')}
+    </tbody></table>
+    <div class="modal-actions"><button class="btn ghost" id="cm-close">Close</button></div>
+  </div></div></div>`;
+  document.getElementById('cm-close').addEventListener('click',closeModal);
+  document.getElementById('cm-overlay').addEventListener('click',e=>{if(e.target.id==='cm-overlay')closeModal();});
+}
+
+/* ---- Roster ---- */
+function renderRoster(){
+  const el=document.getElementById('view-roster');
+  const ranked=STATE.players.slice().sort((a,b)=>STATE.standings[b.id].points-STATE.standings[a.id].points);
+  const hof=hofCounts();
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">The Field</span><h2>Players</h2></div></div>
+  <div class="grid auto">
+  ${ranked.map((p,i)=>{
+    const o=overallOf(p.attrs);const tier=tierOf(o);const st=STATE.standings[p.id];
+    const h=hof[p.name]||{majors:0,tourChamps:0,champGolfer:0};
+    const form=formLabel(playerFormScore(p.id));
+    return `<div class="card" style="padding:16px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="avatar" style="width:40px;height:40px;font-size:14px;background:${avatarColor(p.name)};">${initialsOf(p.name)}</span>
+        <div style="flex:1;">
+          <h3 style="font-size:16px;">${escapeHTML(p.name)}</h3>
+          <div style="font-size:11.5px;color:var(--ink-500);">Rank #${i+1} · ${st.points.toLocaleString()} pts</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="num" style="font-size:22px;color:${tier.color};">${o}</div>
+          <div style="font-size:9.5px;text-transform:uppercase;color:var(--ink-500);">${tier.label}</div>
+        </div>
+      </div>
+      <div style="font-size:11px;margin-top:6px;color:${form.color};font-weight:600;">${form.label}</div>
+      ${ATTRS.map(a=>`<div class="attr-bar-row"><span>${a.label}</span><div class="attr-bar-track"><div class="attr-bar-fill" style="width:${p.attrs[a.key]}%;"></div></div><span class="num">${p.attrs[a.key]}</span></div>`).join('')}
+      ${(h.majors||h.tourChamps||h.champGolfer)?`<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+        ${h.majors?`<span class="hof-badge"><span class="n">${h.majors}</span><span class="l">Majors</span></span>`:''}
+        ${h.tourChamps?`<span class="hof-badge"><span class="n">${h.tourChamps}</span><span class="l">Tour Champ</span></span>`:''}
+        ${h.champGolfer?`<span class="hof-badge"><span class="n">${h.champGolfer}</span><span class="l">Champ Golfer</span></span>`:''}
+      </div>`:''}
+      <button class="btn ghost btn-sm" style="width:100%;margin-top:12px;" data-edit-player="${p.id}">Edit Profile</button>
+    </div>`;
+  }).join('')}
+  </div>`;
+  el.querySelectorAll('[data-edit-player]').forEach(b=>b.addEventListener('click',()=>openPlayerEditModal(b.dataset.editPlayer)));
+}
+
+/* ---- Editable Player Profiles ---- */
+function openPlayerEditModal(pid){
+  const p=getPlayer(pid);if(!p)return;
+  const root=document.getElementById('modal-root');
+  const draft={name:p.name,country:p.country,attrs:{...p.attrs}};
+  function draw(){
+    const o=overallOf(draft.attrs);const tier=tierOf(o);
+    root.innerHTML=`<div class="modal-overlay" id="pe-overlay"><div class="modal" style="max-width:520px;"><div class="modal-pad">
+      <h3>Edit Player Profile</h3>
+      <div class="modal-sub">Adjust identity and skill attributes. Overall rating recalculates live.</div>
+      <div style="display:flex;gap:10px;margin-bottom:14px;">
+        <div style="flex:1;">
+          <div class="eyebrow" style="margin-bottom:4px;">Name</div>
+          <input type="text" id="pe-name" value="${escapeHTML(draft.name)}" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-family:'Inter',sans-serif;font-size:13px;background:#fff;">
+        </div>
+        <div style="width:120px;">
+          <div class="eyebrow" style="margin-bottom:4px;">Country</div>
+          <select id="pe-country" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-family:'Inter',sans-serif;font-size:13px;background:#fff;">
+            <option value="IN" ${draft.country==='IN'?'selected':''}>India</option>
+            <option value="USA" ${draft.country==='USA'?'selected':''}>USA</option>
+            <option value="International" ${draft.country==='International'?'selected':''}>Other</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--sand-200);border-radius:4px;padding:10px 14px;margin-bottom:10px;">
+        <span class="eyebrow">Overall Rating</span>
+        <span class="num" style="font-size:22px;color:${tier.color};">${o} <span style="font-size:11px;text-transform:uppercase;color:var(--ink-500);font-family:'Barlow Condensed',sans-serif;">${tier.label}</span></span>
+      </div>
+      <div id="pe-attrs">
+      ${ATTRS.map(a=>`<div style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px;">
+          <span title="${escapeHTML(a.desc)}">${a.label}</span><span class="num" id="pe-val-${a.key}">${draft.attrs[a.key]}</span>
+        </div>
+        <input type="range" min="30" max="99" value="${draft.attrs[a.key]}" id="pe-attr-${a.key}" style="width:100%;accent-color:var(--turf-600);">
+      </div>`).join('')}
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="pe-cancel">Cancel</button>
+        <button class="btn amber" id="pe-save">Save Changes</button>
+      </div>
+    </div></div></div>`;
+    document.getElementById('pe-overlay').addEventListener('click',e=>{if(e.target.id==='pe-overlay')closeModal();});
+    document.getElementById('pe-cancel').addEventListener('click',closeModal);
+    document.getElementById('pe-name').addEventListener('input',e=>{draft.name=e.target.value;});
+    document.getElementById('pe-country').addEventListener('change',e=>{draft.country=e.target.value;});
+    ATTRS.forEach(a=>{
+      document.getElementById('pe-attr-'+a.key).addEventListener('input',e=>{
+        draft.attrs[a.key]=clamp(parseInt(e.target.value,10)||1,1,99);
+        document.getElementById('pe-val-'+a.key).textContent=draft.attrs[a.key];
+        const no=overallOf(draft.attrs);const nt=tierOf(no);
+        const ratingEl=document.querySelector('#pe-overlay .num[style*="font-size:22px"]');
+        if(ratingEl)ratingEl.innerHTML=`${no} <span style="font-size:11px;text-transform:uppercase;color:var(--ink-500);font-family:'Barlow Condensed',sans-serif;">${nt.label}</span>`;
+      });
+    });
+    document.getElementById('pe-save').addEventListener('click',()=>{
+      const nm=draft.name.trim();
+      if(!nm){showToast('Name cannot be empty.',true);return;}
+      p.name=nm;p.country=draft.country;p.attrs={...draft.attrs};
+      saveState();closeModal();showToast(`${p.name}'s profile updated.`);renderRoster();refreshTopbar();
+    });
+  }
+  draw();
+}
+
+/* ---- Points Table ---- */
+function renderPoints(){
+  const el=document.getElementById('view-points');
+  const completedEvents=STATE.events.filter(e=>e.kind==='stroke'&&e.status==='complete');
+  const ranked=STATE.players.slice().sort((a,b)=>STATE.standings[b.id].points-STATE.standings[a.id].points);
+  const finaleReached=STATE.events[8].status==='complete';
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">Season Standings</span><h2>Points Table</h2></div>
+    <div class="eyebrow">${finaleReached?'Top 8 qualify for the V TOUR Championship':'9 stroke-play events determine the Tour Champion'}</div></div>
+  <div class="card scrollbar-thin" style="overflow-x:auto;padding:4px;">
+  <table><thead><tr><th>#</th><th>Player</th>${completedEvents.map(e=>`<th title="${escapeHTML(e.name)}">${e.major?'★ ':''}E${e.idx+1}</th>`).join('')}<th>Total</th></tr></thead>
+  <tbody>
+  ${ranked.map((p,i)=>{
+    const st=STATE.standings[p.id];
+    const qualifies=finaleReached&&i<8;
+    return `<tr class="${qualifies?'me-row':''}"><td class="num">${i+1}${qualifies?' 🏁':''}</td><td>${escapeHTML(p.name)}</td>
+    ${completedEvents.map(e=>{
+      const h=st.history.find(x=>x.eventIdx===e.idx);
+      return `<td class="num">${h?h.points:'—'}</td>`;
+    }).join('')}
+    <td class="num" style="font-weight:700;">${st.points.toLocaleString()}</td></tr>`;
+  }).join('')}
+  </tbody></table>
+  </div>`;
+}
+
+/* ---- Hall of Fame ---- */
+function renderHOF(){
+  const el=document.getElementById('view-hof');
+  const majorNames=['The Masters','PGA Championship','U.S. Open','The Open Championship'];
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">All-Time Records</span><h2>Hall of Fame</h2></div></div>
+  <div class="grid cols-2">
+    <div class="card" style="padding:18px;">
+      <div class="eyebrow" style="margin-bottom:10px;">Major Champions</div>
+      ${majorNames.map(mn=>{
+        const wins=STATE.hallOfFame.majors.filter(m=>m.event===mn);
+        return `<div style="margin-bottom:12px;">
+          <div style="font-family:'Oswald',sans-serif;font-size:14px;color:var(--turf-800);">${mn}</div>
+          ${wins.length?wins.slice().reverse().map(w=>`<div style="font-size:12.5px;color:var(--ink-700);padding:3px 0;">Tour ${w.tour} — <b>${escapeHTML(w.winnerName)}</b> <span style="color:var(--ink-500);">(${escapeHTML(w.course)}, ${toParStr(w.toPar)})</span></div>`).join(''):'<div style="font-size:12px;color:var(--ink-500);">Not yet won.</div>'}
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card" style="padding:18px;">
+      <div class="eyebrow" style="margin-bottom:10px;">Tour Champions (Points Leaders)</div>
+      ${STATE.hallOfFame.tourChampions.length?STATE.hallOfFame.tourChampions.slice().reverse().map(t=>`<div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--line);">Tour ${t.tour} — 👑 <b>${escapeHTML(t.championName)}</b> <span style="color:var(--ink-500);">(${t.points.toLocaleString()} pts)</span></div>`).join(''):'<div class="empty-state" style="padding:20px;"><p>No Tour Champion crowned yet.</p></div>'}
+      <div class="eyebrow" style="margin:18px 0 10px;">Champion Golfer of the Year</div>
+      ${STATE.hallOfFame.champions.length?STATE.hallOfFame.champions.slice().reverse().map(c=>`<div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--line);">Tour ${c.tour} — 🏆 <b>${escapeHTML(c.championName)}</b> <span style="color:var(--ink-500);">def. ${escapeHTML(c.runnerUpName)} in the final</span></div>`).join(''):'<div class="empty-state" style="padding:20px;"><p>No Champion Golfer yet.</p></div>'}
+    </div>
+  </div>
+  <div class="card" style="padding:18px;margin-top:14px;">
+    <div class="eyebrow" style="margin-bottom:10px;">All-Time Badge Count</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+    ${STATE.players.map(p=>{
+      const h=hofCounts()[p.name]||{majors:0,tourChamps:0,champGolfer:0};
+      if(!(h.majors||h.tourChamps||h.champGolfer))return'';
+      return `<div class="card" style="padding:10px 14px;display:flex;align-items:center;gap:10px;">
+        <span class="avatar" style="width:30px;height:30px;font-size:11px;background:${avatarColor(p.name)};">${initialsOf(p.name)}</span>
+        <div><div style="font-size:13px;font-weight:600;">${escapeHTML(p.name)}</div>
+        <div style="font-size:11px;color:var(--ink-500);">${h.majors} Majors · ${h.tourChamps} Tour Champ · ${h.champGolfer} Champ Golfer</div></div>
+      </div>`;
+    }).join('')||'<div class="empty-state" style="padding:20px;width:100%;"><p>No badges awarded yet — play through the tour to build history.</p></div>'}
+    </div>
+  </div>`;
+}
+
+/* ---- Play view ---- */
+function renderPlay(){
+  const el=document.getElementById('view-play');
+  const ci=currentEventIdx();
+  const ev=ci!==-1?STATE.events[ci]:STATE.events[9];
+  if(!ev||ev.status==='upcoming'&&ev.idx!==9){el.innerHTML=`<div class="empty-state"><h3>Nothing to play yet</h3><p>Head to Schedule to see what's up next.</p></div>`;return;}
+  if(ev.kind==='final')renderFinalePlay(el,ev);
+  else renderStrokePlay(el,ev);
+}
+function renderStrokePlay(el,ev){
+  ensureRounds(ev);
+  const course=getCourse(ev.courseId);
+  if(!ev.__ri&&ev.__ri!==0)ev.__ri=ev.rounds.findIndex(r=>!STATE.players.every(p=>r.scores[p.id].every(v=>v!=null)));
+  if(ev.__ri===-1)ev.__ri=3;
+  const ri=ev.__ri;
+  const lb=computeLeaderboard(ev);
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">${ev.major?'Major Championship · ':''}${escapeHTML(course.name)} · ${escapeHTML(course.loc)}</span><h2>${escapeHTML(ev.name)}</h2></div>
+    <div><button class="btn ghost btn-sm" id="sim-whole-event">Simulate Entire Event</button></div></div>
+  <div class="grid cols-2" style="align-items:start;">
+    <div>
+      <div class="card" style="padding:14px;margin-bottom:12px;">
+        <div class="eyebrow" style="margin-bottom:8px;">Round</div>
+        <div style="display:flex;gap:6px;">
+          ${[0,1,2,3].map(r=>`<button class="btn ${r===ri?'':'ghost'} btn-sm" data-round="${r}" ${r>ri&&!roundComplete(ev,ri)?'disabled':''}>R${r+1}${roundComplete(ev,r)?' ✓':''}</button>`).join('')}
+        </div>
+        <div class="wind-flag" style="margin-top:10px;color:var(--sky-blue);">💨 ${WIND_LABELS[ev.rounds[ri].windLevel]} wind · ${windMphDisplay(ev.rounds[ri].windLevel)} mph</div>
+      </div>
+      <div id="play-panel"></div>
+    </div>
+    <div class="card" style="padding:14px;">
+      <div class="eyebrow" style="margin-bottom:8px;">Leaderboard · Thru ${lb.length?Math.max(...lb.map(r=>r.roundsPlayed<4?r.thru:18)):0}</div>
+      <table><thead><tr><th>Pos</th><th>Player</th><th>To Par</th><th>Thru</th><th>Total</th></tr></thead><tbody>
+      ${lb.map(r=>`<tr><td>${r.pos}</td><td>${escapeHTML(r.name)}</td><td class="num" style="color:${r.toPar<0?'var(--flag-red)':'inherit'};">${toParStr(r.toPar)}</td><td>${r.roundsPlayed>=4?'F':`R${r.roundsPlayed+1} · ${r.thru}`}</td><td class="num">${r.total}</td></tr>`).join('')}
+      </tbody></table>
+    </div>
+  </div>`;
+  el.querySelectorAll('[data-round]').forEach(b=>b.addEventListener('click',()=>{
+    const r=parseInt(b.dataset.round,10);
+    if(r>0&&!roundComplete(ev,r-1)){showToast('Finish the previous round first.',true);return;}
+    ev.__ri=r;PLAY.focusPid=null;PLAY.hs=null;PLAY.holeStates={};renderPlay();
+  }));
+  document.getElementById('sim-whole-event').addEventListener('click',()=>{
+    simulateEntireEvent(ev);showToast(`${ev.name} complete!`);refreshTopbar();renderPlay();
+  });
+  renderStrokePanel(ev,ri);
+}
+function windMphDisplay(level){const[a,b]=WIND_MPH[level];return a+'-'+b;}
+function renderStrokePanel(ev,ri){
+  const panel=document.getElementById('play-panel');
+  const rnd=ev.rounds[ri];
+  const pending=STATE.players.filter(p=>nextOpenHole(ev,ri,p.id)!==-1);
+  if(pending.length===0){
+    panel.innerHTML=`<div class="card" style="padding:20px;text-align:center;">
+      <h3>Round ${ri+1} complete</h3>
+      ${ri<3?`<button class="btn amber" id="advance-r" style="margin-top:12px;">Continue to Round ${ri+2}</button>`:`<button class="btn amber" id="finalize-ev" style="margin-top:12px;">Finalize Event</button>`}
+    </div>`;
+    document.getElementById('advance-r')?.addEventListener('click',()=>{ev.__ri=ri+1;renderPlay();});
+    document.getElementById('finalize-ev')?.addEventListener('click',()=>{finishEventIfDone(ev);showToast(`${ev.name} is complete!`);refreshTopbar();renderPlay();});
+    return;
+  }
+  if(PLAY.focusPid&&!pending.some(p=>p.id===PLAY.focusPid)){PLAY.focusPid=null;PLAY.hs=null;}
+  panel.innerHTML=`<div class="card" style="padding:14px;margin-bottom:12px;">
+    <div class="eyebrow" style="margin-bottom:8px;">Pick a player to step up to the tee</div>
+    <div class="player-chip-row">
+      ${STATE.players.map(p=>{
+        const done=nextOpenHole(ev,ri,p.id)===-1;
+        const active=p.id===PLAY.focusPid;
+        return `<button class="player-chip ${active?'active':''}" data-focus="${p.id}" ${done?'disabled':''}>
+          <span class="avatar" style="width:18px;height:18px;font-size:8px;background:${avatarColor(p.name)};">${initialsOf(p.name)}</span>
+          ${escapeHTML(p.name)} <span style="opacity:.7;">${done?'· done':'· H'+(nextOpenHole(ev,ri,p.id)+1)}</span>
+        </button>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;border-top:1px solid var(--line);padding-top:10px;">
+      <button class="btn ghost btn-sm" id="sim-rest-round">Simulate Rest of Round (everyone else)</button>
+      <button class="btn ghost btn-sm" id="sim-round-all" style="border-color:var(--board-amber);color:#7a5a0a;">Simulate Whole Round (all players)</button>
+    </div>
+  </div>
+  <div id="hole-control"></div>`;
+  panel.querySelectorAll('[data-focus]').forEach(b=>b.addEventListener('click',()=>{
+    const pid=b.dataset.focus;PLAY.focusPid=pid;
+    const hIdx=nextOpenHole(ev,ri,pid);PLAY.holeIdx=hIdx;
+    // Resume this player's in-progress shots for the current hole if we have
+    // them cached (they were mid-hole when we tabbed away to another player)
+    // — otherwise this is a fresh hole for them, start clean.
+    const cached=PLAY.holeStates[pid];
+    const state=(cached&&cached._forHoleIdx===hIdx)?cached:newHoleState(getCourse(ev.courseId).holes[hIdx]);
+    state._forHoleIdx=hIdx;
+    setPlayHoleState(pid,state);
+    renderPlay();
+  }));
+  document.getElementById('sim-rest-round').addEventListener('click',()=>{
+    simulateRestOfRound(ev,ri,PLAY.focusPid);
+    Object.keys(PLAY.holeStates).forEach(pid=>{if(pid!==PLAY.focusPid)delete PLAY.holeStates[pid];});
+    showToast('Simulated the field.');renderPlay();
+  });
+  document.getElementById('sim-round-all').addEventListener('click',()=>{
+    simulateRestOfRound(ev,ri,null);PLAY.focusPid=null;PLAY.hs=null;PLAY.holeStates={};showToast(`Round ${ri+1} simulated for everyone.`);renderPlay();
+  });
+  if(PLAY.focusPid)renderHoleControl(ev,ri);
+  else document.getElementById('hole-control').innerHTML=`<div class="empty-state" style="padding:26px;"><p>Select a player above to play shot-by-shot, or simulate the round instantly.</p></div>`;
+}
+function renderHoleControl(ev,ri){
+  const course=getCourse(ev.courseId);const holeDef=course.holes[PLAY.holeIdx];const rnd=ev.rounds[ri];
+  const pid=PLAY.focusPid;const player=getPlayer(pid);const hs=PLAY.hs;
+  const wrap=document.getElementById('hole-control');
+  const scoreArr=rnd.scores[pid];
+  const parSoFar=course.holes.slice(0,PLAY.holeIdx).reduce((s,h)=>s+h.par,0);
+  const strokesSoFar=scoreArr.slice(0,PLAY.holeIdx).reduce((s,v)=>s+(v||0),0);
+  wrap.innerHTML=`<div class="grid cols-2" style="align-items:start;">
+    <div class="card" style="padding:16px;text-align:center;">
+      <div class="eyebrow">Hole ${PLAY.holeIdx+1} · Par ${holeDef.par} · ${holeDef.yards}y ${holeDef.water?'<span class="badge water">Water</span>':''}</div>
+      ${buildHoleSVG(course,holeDef,hs,rnd.windLevel,rnd.windDir)}
+    </div>
+    <div class="card" style="padding:16px;">
+      <div style="display:flex;justify-content:space-between;">
+        <div><div class="eyebrow">${escapeHTML(player.name)}</div><h3 style="font-size:18px;">${lieLabel(hs.lie)} · Shot ${hs.strokes+1}</h3></div>
+        <div style="text-align:right;"><div class="eyebrow">Thru ${PLAY.holeIdx}</div><div class="num" style="font-size:18px;">${PLAY.holeIdx===0?'—':toParStr(strokesSoFar-parSoFar)}</div></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:14px;background:var(--sand-200);border-radius:4px;padding:12px 14px;">
+        <div style="flex:1;"><div class="eyebrow">Lie</div><div style="color:${lieColor(hs.lie)};font-family:'Oswald',sans-serif;">${lieLabel(hs.lie)}</div></div>
+        <div style="flex:1;text-align:center;"><div class="eyebrow">${hs.lie==='green'?'To Hole':'To Pin'}</div><div class="num" style="font-size:18px;">${hs.lie==='green'?hs.puttDistanceFt+' ft':Math.round(hs.remaining)+'y'}</div></div>
+        <div style="flex:1;text-align:right;"><div class="eyebrow">Strokes</div><div class="num" style="font-size:18px;">${hs.strokes}</div></div>
+      </div>
+      <div style="margin-top:10px;max-height:120px;overflow-y:auto;display:flex;flex-direction:column-reverse;gap:5px;" class="scrollbar-thin">
+        ${hs.log.slice().reverse().map((l,i)=>`<div style="font-size:12.5px;padding:6px 9px;background:${i===0?'rgba(51,113,74,.1)':'transparent'};border-left:3px solid ${i===0?'var(--turf-600)':'var(--line)'};border-radius:3px;">${escapeHTML(l)}</div>`).join('')}
+      </div>
+      <button class="btn amber" id="hit-shot" style="width:100%;margin-top:12px;padding:13px;" ${hs.holedOut?'disabled':''}>${hs.strokes===0?'Tee Off':'Hit Next Shot'}</button>
+      ${hs.holedOut?`<button class="btn" id="confirm-hole" style="width:100%;margin-top:8px;">Confirm ${hs.strokes} · ${holeResultWord(hs.strokes,holeDef.par)} — Next Hole</button>`:''}
+    </div>
+  </div>`;
+  document.getElementById('hit-shot').addEventListener('click',()=>{
+    playShot(hs,effectiveAttrs(player,rnd.luck&&rnd.luck[pid]),ev.difficulty,rnd.windLevel,holeDef.water);
+    renderHoleControl(ev,ri);
+  });
+  document.getElementById('confirm-hole')?.addEventListener('click',()=>{
+    rnd.scores[pid][PLAY.holeIdx]=hs.strokes;
+    const next=nextOpenHole(ev,ri,pid);
+    if(next===-1){PLAY.focusPid=null;setPlayHoleState(pid,null);showToast(`${player.name} signs for their card.`);}
+    else{
+      PLAY.holeIdx=next;
+      const state=newHoleState(course.holes[next]);
+      state._forHoleIdx=next;
+      setPlayHoleState(pid,state);
+    }
+    saveState();renderPlay();
+  });
+}
+
+/* ---- Match-play finale rendering ---- */
+function renderFinalePlay(el,ev){
+  const course=getCourse(ev.courseId);
+  if(!ev.bracket){el.innerHTML=`<div class="empty-state"><h3>Finale not seeded yet</h3><p>The top 8 will be seeded once Event 9 wraps up.</p></div>`;return;}
+  const br=ev.bracket;const round=br.rounds[br.rounds.length-1];
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">${escapeHTML(course.name)} · ${escapeHTML(course.loc)} · Match Play</span><h2>${escapeHTML(ev.name)}</h2></div>
+    <div class="eyebrow">${br.champion?'Champion Golfer of the Year Crowned':round.name}</div></div>
+  ${br.champion?`<div class="card" style="padding:20px 22px;margin-bottom:16px;border-left:4px solid var(--board-amber);background:linear-gradient(90deg,rgba(217,161,59,.1),transparent);">
+    <div class="eyebrow" style="color:#7a5a0a;">Champion Golfer of the Year</div>
+    <h3 style="font-size:22px;margin-top:2px;">🏆 ${escapeHTML(getPlayer(br.champion).name)}</h3>
+    <p style="font-size:13px;color:var(--ink-500);margin-top:4px;">Defeated ${escapeHTML(getPlayer(br.runnerUp).name)} in the 36-hole Final at ${escapeHTML(course.name)}.</p>
+  </div>`:''}
+  <div style="display:flex;flex-direction:column;gap:20px;">
+  ${br.rounds.map((r,ri)=>`<div>
+    <h3 style="font-size:15px;text-transform:uppercase;color:var(--turf-900);margin-bottom:8px;">${r.name} ${r.holes===36?'· 36 holes':'· 18 holes'}</h3>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${r.matches.map((m,mi)=>matchRowHTML(ri,mi,m)).join('')}
+    </div>
+  </div>`).join('')}
+  </div>`;
+  el.querySelectorAll('[data-sim-match]').forEach(b=>b.addEventListener('click',()=>{
+    const[ri,mi]=b.dataset.simMatch.split(':').map(Number);
+    simulateWholeMatch(br.rounds[ri].matches[mi]);
+    finaleAdvanceIfNeeded();
+    showToast('Match complete.');renderPlay();refreshTopbar();
+  }));
+  el.querySelectorAll('[data-play-match]').forEach(b=>b.addEventListener('click',()=>{
+    const[ri,mi]=b.dataset.playMatch.split(':').map(Number);
+    openMatchModal(ri,mi);
+  }));
+}
+function matchRowHTML(ri,mi,m){
+  const pA=getPlayer(m.pidA),pB=getPlayer(m.pidB);
+  const done=m.status==='complete';
+  const statusTxt=done?(m.winnerId===m.pidA?escapeHTML(pA.name):escapeHTML(pB.name))+' wins '+ (m.resultText||''):
+    (m.status==='pending'?'Not started':`Thru ${m.played} · ${m.aUp===0?'All Square':(m.aUp>0?escapeHTML(pA.name)+' '+m.aUp+' up':escapeHTML(pB.name)+' '+(-m.aUp)+' up')}`);
+  return `<div class="card" style="padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span class="seed-num">${m.seedA}</span><span style="min-width:120px;font-weight:${done&&m.winnerId===m.pidA?'700':'400'};">${escapeHTML(pA.name)}</span>
+    <span style="color:var(--ink-500);">vs</span>
+    <span class="seed-num">${m.seedB}</span><span style="min-width:120px;font-weight:${done&&m.winnerId===m.pidB?'700':'400'};">${escapeHTML(pB.name)}</span>
+    <span style="flex:1;font-size:12.5px;color:var(--ink-500);">${statusTxt}</span>
+    ${!done?`<button class="btn ghost btn-sm" data-play-match="${ri}:${mi}">Play</button><button class="btn ghost btn-sm" data-sim-match="${ri}:${mi}" style="border-color:var(--board-amber);color:#7a5a0a;">Simulate</button>`:'<span class="badge status-complete">Final</span>'}
+  </div>`;
+}
+function openMatchModal(ri,mi){
+  const ev=STATE.events[9];const m=ev.bracket.rounds[ri].matches[mi];
+  const root=document.getElementById('modal-root');
+  function draw(){
+    const course=getCourse(ev.courseId);
+    const pA=getPlayer(m.pidA),pB=getPlayer(m.pidB);
+    const wl=windLevelForCourse(course);
+    root.innerHTML=`<div class="modal-overlay" id="mm-overlay"><div class="modal" style="max-width:600px;"><div class="modal-pad">
+      <h3>${escapeHTML(pA.name)} vs ${escapeHTML(pB.name)}</h3>
+      <div class="modal-sub">${ev.bracket.rounds[ri].name} · ${m.holes} holes · Thru ${m.played}</div>
+      <div style="text-align:center;font-family:'Oswald',sans-serif;font-size:20px;margin:10px 0;">
+        ${m.status==='complete'?(m.winnerId===m.pidA?escapeHTML(pA.name):escapeHTML(pB.name))+' wins '+(m.resultText||''):
+          (m.aUp===0?'All Square':(m.aUp>0?escapeHTML(pA.name)+' '+m.aUp+' UP':escapeHTML(pB.name)+' '+(-m.aUp)+' UP'))}
+      </div>
+      <div style="max-height:200px;overflow-y:auto;" class="scrollbar-thin">
+        ${m.log.slice().reverse().map(l=>`<div style="font-size:12.5px;padding:6px 8px;border-bottom:1px solid var(--line);">Hole ${l.hole} (Par ${l.par})${l.playoff?' · Playoff':''}: ${escapeHTML(pA.name)} ${l.strokesA} — ${escapeHTML(pB.name)} ${l.strokesB} <b>${l.winner==='halve'?'Halved':l.winner==='A'?escapeHTML(pA.name)+' wins hole':escapeHTML(pB.name)+' wins hole'}</b></div>`).join('')||'<div class="empty-state" style="padding:16px;"><p>No holes played yet.</p></div>'}
+      </div>
+      <div class="modal-actions">
+        <button class="btn ghost" id="mm-close">Close</button>
+        ${m.status!=='complete'?`<button class="btn" id="mm-hole">Play Next Hole</button><button class="btn amber" id="mm-sim">Simulate Rest</button>`:''}
+      </div>
+    </div></div></div>`;
+    document.getElementById('mm-close').addEventListener('click',closeModal);
+    document.getElementById('mm-overlay').addEventListener('click',e=>{if(e.target.id==='mm-overlay')closeModal();});
+    document.getElementById('mm-hole')?.addEventListener('click',()=>{
+      if(m.status==='playoff')simulateMatchPlayoffHole(m,wl,ev.difficulty);else simulateMatchHole(m,wl,ev.difficulty);
+      if(m.status==='complete'){finaleAdvanceIfNeeded();refreshTopbar();}
+      saveState();draw();
+    });
+    document.getElementById('mm-sim')?.addEventListener('click',()=>{
+      simulateWholeMatch(m);finaleAdvanceIfNeeded();refreshTopbar();saveState();draw();
+    });
+  }
+  draw();
+}
+
+/* ===== MODAL / RESET ===== */
+function closeModal(){document.getElementById('modal-root').innerHTML='';}
+function wireNav(){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',()=>switchView(t.dataset.view)));
+  document.getElementById('restart-btn').addEventListener('click',openResetModal);
+}
+function openResetModal(){
+  const root=document.getElementById('modal-root');
+  root.innerHTML=`<div class="modal-overlay" id="rs-overlay"><div class="modal" style="max-width:480px;border-top-color:var(--flag-red);"><div class="modal-pad">
+    <h3>Start a New Tour?</h3>
+    <div class="modal-sub">Choose whether to keep your all-time Hall of Fame history.</div>
+    <div class="modal-actions" style="justify-content:flex-start;flex-wrap:wrap;">
+      <button class="btn ghost" id="rs-cancel">Cancel</button>
+      <button class="btn amber" id="rs-soft">New Tour (keep Hall of Fame)</button>
+      <button class="btn danger" id="rs-hard">Full Wipe (reset everything)</button>
+    </div>
+  </div></div></div>`;
+  document.getElementById('rs-cancel').addEventListener('click',closeModal);
+  document.getElementById('rs-overlay').addEventListener('click',e=>{if(e.target.id==='rs-overlay')closeModal();});
+  document.getElementById('rs-soft').addEventListener('click',()=>{
+    const hof=STATE.hallOfFame;const tourNum=STATE.tourNumber+1;
+    STATE=freshState();STATE.tourNumber=tourNum;STATE.hallOfFame=hof;
+    saveState();closeModal();refreshTopbar();switchView('dashboard');showToast(`New tour started — Tour ${tourNum}.`);
+  });
+  document.getElementById('rs-hard').addEventListener('click',()=>{
+    STATE=freshState();saveState();closeModal();refreshTopbar();switchView('dashboard');showToast('Full reset — Tour 1.');
+  });
+}
+
+/* ===== INIT ===== */
+function init(){
+  STATE=loadState()||freshState();
+  saveState();
+  wireNav();refreshTopbar();switchView('dashboard');
+}
+document.addEventListener('DOMContentLoaded',init);
+})();
+</script>
+</body>
+</html>
