@@ -147,6 +147,7 @@ tr.me-row{background:rgba(217,161,59,.10);}
       <button class="nav-tab" data-view="teams">Teams</button>
       <button class="nav-tab" data-view="points">Points Table</button>
       <button class="nav-tab" data-view="hof">🏆 Hall of Fame</button>
+      <button class="nav-tab" data-view="traditions">🎖️ Traditions</button>
       <button class="nav-tab" data-view="play" id="tab-play" style="display:none;">This Event</button>
       <button class="nav-tab" data-view="live" id="tab-live" style="display:none;">🔴 Live Leaderboard</button>
     </nav>
@@ -163,6 +164,7 @@ tr.me-row{background:rgba(217,161,59,.10);}
     <section class="view" id="view-teams"></section>
     <section class="view" id="view-points"></section>
     <section class="view" id="view-hof"></section>
+    <section class="view" id="view-traditions"></section>
     <section class="view" id="view-play"></section>
     <section class="view" id="view-live"></section>
   </main>
@@ -267,6 +269,231 @@ const EVENT_DEFS=[
   {name:'The Open Championship',courseId:'sta',major:true,kind:'stroke',difficulty:2.05,purse:17000000},
   {name:'V TOUR Championship',courseId:'pin',major:false,kind:'final',difficulty:1.5,purse:15000000},
 ];
+/* ===== TRADITIONS & TROPHIES =====
+   Lore for each event: the trophy itself, the perks a champion takes home
+   (wearables, access, keepsakes), and the rituals that build up year over
+   year as the tour's history accumulates. Purely flavor/lore data — does
+   not affect scoring. */
+const TRADITIONS={
+  'Pebble Beach Pro-Classic':{
+    icon:'🐚',
+    trophyName:'The Carmel Conch',
+    trophyStyle:'Hand-hammered sterling silver, cypress-burl base',
+    trophyDesc:"A hand-hammered sterling silver conch shell, its spiral ridges polished to a mirror finish, mounted on a base cut from a single piece of reclaimed Monterey cypress driftwood salvaged from the grove around the famous Lone Cypress. A thin inlay of natural abalone shell traces the coastline of the course along the shell's outer lip, catching blue and green light depending on the angle.",
+    perks:[
+      "A numbered tan cashmere 'Pro-Classic' cardigan, one edition per champion, never reissued",
+      "A single Pacific abalone pearl set into a silver signet ring",
+      "A lifetime tee time reserved every year at the resort's members course",
+      "A framed aerial photograph of the 7th hole, shot the morning after the win",
+      "A standing guest slot in the following year's pro-am pairing party"
+    ],
+    traditions:[
+      "At sunrise the morning after victory, the champion walks to the rocks by the 18th and tosses a single silver coin into the surf 'for luck'",
+      "The cardigan is loaned back to the champions' lounge for display during the following year's event, then returned to its owner for good",
+      "The new champion's name is carved into a fresh piece of driftwood and added to the clubhouse's 'Champions Reef' wall",
+      "Past champions gather the evening before the next Pro-Classic for a low-key beachside dinner known informally as 'The Sandbar'"
+    ]
+  },
+  'THE PLAYERS at Sawgrass':{
+    icon:'🏝️',
+    trophyName:'The Island Cup',
+    trophyStyle:'Glass-and-gold sculpture of the famous 17th green',
+    trophyDesc:"A trophy sculpted to resemble the tournament's famous island green in miniature: a disc of textured green-tinted glass 'turf' rising from a rippling glass 'lake' base lit from beneath, with an 18-karat gold flagstick planted dead center. Every champion's name is etched not on a plaque but directly into the surface of the 'water.'",
+    perks:[
+      "A custom teal blazer — 'The Sawgrass Teal' — tailored and delivered within 48 hours of the win",
+      "A literal fragment of turf cut from the 17th green the morning after victory, pressed and framed",
+      "First honors hitting the ceremonial tee shot at the 17th the following year",
+      "A reserved boat slip at the marina behind the clubhouse for the season",
+      "A seat at the base of the trophy's engraved ring, joining a rotating cup future champions also drink from at the presentation"
+    ],
+    traditions:[
+      "The reigning champion is first to walk alone across the Champions' Boardwalk to the 17th tee before their title defense begins",
+      "Any player who makes a hole-in-one on the 17th during the event earns an honorary dinner invitation from the sitting champion",
+      "Each blazer button is stamped with the win year; champions who return in later years add a matching button to a personal 'keeper chain'",
+      "At the champions dinner, the Island Cup is filled with sweet tea and passed hand to hand around the table"
+    ]
+  },
+  'The Masters':{
+    icon:'🧥',
+    trophyName:'The Green Jacket',
+    trophyStyle:'Single-breasted forest-green blazer, brass crest buttons',
+    trophyDesc:"The true prize is not a trophy at all but the jacket itself: single-breasted, forest green, with brass buttons stamped with the clubhouse crest, tailored overnight by the club's longtime in-house tailor to fit the new champion exactly. A smaller sterling-silver replica of the clubhouse, engraved with the winner's name and score, is presented alongside it to keep permanently.",
+    perks:[
+      "The Green Jacket, worn freely for the calendar year, then returned to hang for life in the Champions Locker Room — wearable on club grounds anytime after",
+      "A named locker in the Champions Locker Room",
+      "A lifetime invitation to play in the tournament",
+      "The honor of choosing the menu at next year's Champions Dinner",
+      "A custom-cast miniature silver clubhouse trophy, engraved and kept forever"
+    ],
+    traditions:[
+      "The following year, the reigning champion hosts the Champions Dinner and picks the menu, often built around their hometown cuisine",
+      "The jacket is presented on the putting green by the previous year's champion, who holds it open for the new winner to step into",
+      "The new champion's photograph is added to the clubhouse's 'Big Board' gallery",
+      "Decades later, once their playing days are behind them, past champions are given the honor of choosing who tees off as the event's honorary starter",
+      "Every champion keeps a standing lifetime pass to the grounds, and many return each year to play a quiet nostalgia round on the Monday of tournament week"
+    ]
+  },
+  'Australian Open Invitational':{
+    icon:'✨',
+    trophyName:'The Southern Cross Cup',
+    trophyStyle:'Squat silver cup set with five sapphires',
+    trophyDesc:"A wide-bellied silver cup set with five small sapphires arranged in the shape of the Southern Cross constellation, its rim wrapped in a hand-engraved band of native flora patterns. The handles are cast to resemble twisting eucalyptus branches.",
+    perks:[
+      "A tailored bush-leather Akubra hat with a gold hat-band pin",
+      "A harbour dinner cruise for the champion and guests on the night of victory",
+      "A bottle of the host vineyard's reserve shiraz, vintage-matched to the win year",
+      "Honorary membership to the host club, with waived green fees for life",
+      "A commemorative gold coin minted with the champion's silhouette"
+    ],
+    traditions:[
+      "The champion rings the ship's bell at the harbour club at dusk on finals day",
+      "The Akubra hat is signed by each new champion who visits the clubhouse; after five signatures it's retired to a display case and a fresh hat starts the cycle",
+      "The new champion buries a golf ball beneath a eucalyptus sapling planted in the 'Champions Grove' behind the 18th green",
+      "The reserve shiraz is opened only at the champion's own discretion — many hold onto it for decades, saving it for a milestone"
+    ]
+  },
+  'PGA Championship':{
+    icon:'🏺',
+    trophyName:"The Keeper's Vase",
+    trophyStyle:'Oversized sterling silver loving cup',
+    trophyDesc:"Deliberately the largest and heaviest trophy on tour: an oversized sterling silver loving cup with a wide fluted base, so large that champions traditionally need both hands — and often help — to lift it. Every champion's name spirals continuously around the base in hand-cut engraving, an unbroken line stretching back to the championship's first year.",
+    perks:[
+      "A custom-forged silver money clip stamped with the championship seal",
+      "The trophy itself, which travels home with the champion for a full year before returning for engraving",
+      "A lifetime exemption into the championship field",
+      "A seat in the tournament's honorary Wednesday pro-am group the following year",
+      "A hand-tooled leather yardage-book cover bearing the champion's initials"
+    ],
+    traditions:[
+      "Because the cup is too large and heavy to hand off one-handed, the previous champion passes it to the new one with both hands — a literal 'passing of the trophy' moment photographed every year",
+      "The champion's name is hand-engraved in person by the same silversmith family that has done the work for generations",
+      "A private, untelevised 'Iron and Ivy' dinner is held for past champions on the Tuesday of tournament week",
+      "The new champion plants a personalized flag marker into the 'Wall of Champions' green outside the host clubhouse"
+    ]
+  },
+  'Sun City Team Classic':{
+    icon:'☀️',
+    trophyName:'The Sun Shield',
+    trophyStyle:'Round bronze shield with two handles, ruby center',
+    trophyDesc:"A round, sun-shaped bronze shield built with two handles — one for each half of the winning pair — with hammered gold rays radiating outward and a single ruby set at the center to represent the desert sun. The shield is deliberately awkward to lift alone, designed so it can only be raised properly by both partners together.",
+    perks:[
+      "Matching sun-gold blazers, tailored identically for both partners",
+      "A victory braai (open-fire barbecue) hosted by the resort for the winning pair and their families",
+      "A shared engraved keepsake box, its contents split evenly between partners",
+      "A two-year exemption into future Sun City fields as a pair",
+      "A framed side-by-side portrait of the winning duo, hung on the resort's 'Champions Terrace'"
+    ],
+    traditions:[
+      "The winning pair light the ceremonial braai fire together, each holding one match to the kindling",
+      "At the trophy ceremony the Sun Shield is carried by both champions at once, one hand on each handle, in a deliberate show of partnership",
+      "Each partner keeps the shield on display in their own home in alternating years",
+      "A sun-gold flag is raised above the 18th green scoreboard for the full following year, visible across the resort"
+    ]
+  },
+  'U.S. Open':{
+    icon:'🥈',
+    trophyName:'The Open Salver',
+    trophyStyle:'Heavy, unadorned sterling silver on an ebony base',
+    trophyDesc:"A wide, heavy sterling silver trophy on a plain ebony base, deliberately severe and unadorned to match the championship's reputation as the toughest test in golf. There is no elaborate scrollwork — only a plain rim engraved with champions' surnames and their winning score relative to par, nothing more.",
+    perks:[
+      "A silver medal, presented alongside the trophy, which the champion keeps permanently (the trophy itself returns each year for engraving)",
+      "A lifetime exemption into the championship field",
+      "An offer of honorary membership at the host club for the following year",
+      "A money clip forged from the same silver stock as the trophy",
+      "A ceremonial, non-binding invitation to help set pin placements for one practice round the following year"
+    ],
+    traditions:[
+      "The champion is handed the trophy on the 18th green still in golf shoes and unshowered — no delay for ceremony, in keeping with the tournament's no-frills character",
+      "The trophy sits, empty, in the champion's home for exactly one year before returning for its next engraving",
+      "New champions are informally welcomed into a standing group of past winners who call themselves 'Us Against the Course'",
+      "Months later, a single pressed blade of rough grass cut from the 18th is mailed to the champion as a quiet memento"
+    ]
+  },
+  'Open de France National':{
+    icon:'🥂',
+    trophyName:'La Coupe de Cristal',
+    trophyStyle:'Hand-blown faceted crystal on a gilt bronze stem',
+    trophyDesc:"A hand-blown crystal cup from a Loire Valley glassmaker, cut with diamond-sharp facets and mounted on a slender gilt bronze stem. No engraving touches the crystal itself — champions' names are instead recorded on a spiral of small gold rings that thread down the stem, one added each year.",
+    perks:[
+      "A ceremonial saber for sabrage — sword-opening a bottle of champagne at the trophy presentation",
+      "A tailored navy beret with a gold tour crest pin",
+      "A case of the host region's finest vintage, corked and cellared under the champion's name",
+      "A weekend stay at a Loire Valley château the following spring, on the house",
+      "A miniature crystal replica of the cup, kept permanently"
+    ],
+    traditions:[
+      "The champion opens a bottle of champagne with the ceremonial saber atop the 18th green, catching the pour in La Coupe de Cristal",
+      "The beret is worn by the champion at the following year's opening ceremony as defending champion",
+      "By tradition (never a rule) the cellared vintage is opened only for a personal milestone — a marriage, a retirement, a child's birth",
+      "A small brass plaque bearing the champion's name is added to the château's 'Cave des Champions' cellar door"
+    ]
+  },
+  'The Open Championship':{
+    icon:'🍶',
+    trophyName:'The Old Vessel',
+    trophyStyle:'Weathered antique silver jug',
+    trophyDesc:"An antique-style silver jug with a deliberately weathered patina, a wide mouth, and a single curved handle, in keeping with golf's oldest championship trophies. Engraved names circle its neck in an unbroken ring stretching back to the tournament's founding, the older entries worn soft by more than a century of handling.",
+    perks:[
+      "A full-size silver replica of the jug, engraved with only the champion's own name, kept for the year while the original returns for archival engraving",
+      "A tweed touring cap bearing the championship crest",
+      "An honorary 'Freeman of the Links' title from the host town, held for life",
+      "A hand-made hickory-shafted replica club, gifted as a keepsake",
+      "The honor of striking the ceremonial opening tee shot at the following year's event"
+    ],
+    traditions:[
+      "Immediately after the final putt, the champion drinks a dram of scotch straight from the jug's mouth on the 18th green",
+      "The tweed cap is passed to each new champion at a small private handover the night before the following year's first round",
+      "Before their title defense begins, champions are invited to walk the Swilcan Bridge alone at dawn",
+      "Names are hand-engraved by the same silversmith's workshop that has kept the jug for over a century — a slow, deliberate process that takes weeks to complete"
+    ]
+  },
+  'V TOUR Championship':{
+    icon:'👑',
+    trophyName:'The V Cup',
+    trophyStyle:'A composite trophy built from pieces of every other event\u2019s trophy',
+    trophyDesc:"A towering trophy assembled, piece by piece, from replica fragments of the season's other nine trophies — a silver base echoing the Open Salver, crystal facets like La Coupe de Cristal, a small gold flag like the Island Cup, a sapphire cross like the Southern Cross Cup — built to represent a champion who has conquered the entire tour, not just one event.",
+    perks:[
+      "A custom 'Victory Cloak' — a one-of-one, midnight-blue tour blazer with gold piping, distinct from every regular event's jacket and never repeated in design",
+      "Lifetime membership to the V Tour, with full exemption from qualifying, forever",
+      "A permanent nameplate in the Hall of Champions rotunda",
+      "The right to help set the pairings for next season's opening pro-am",
+      "A custom signet ring bearing the tour crest and the champion's win year",
+      "An honorary ambassador role, invited back each year to help present trophies at all nine other events"
+    ],
+    traditions:[
+      "The new Champion Golfer of the Year lights the ceremonial 'Tour Flame' at the following season's opening event; it burns until the next champion is crowned",
+      "The V Cup is displayed at V TOUR HQ for the full year, open to fans, before being returned, disassembled, and rebuilt for the next handoff",
+      "The champion delivers a short address at the following year's Champions Dinner, reflecting on the season just completed",
+      "Each year's Victory Cloak is retired permanently to its champion's personal collection — no two champions ever wear an identical cut, and each year's cloak carries a subtly updated accent color",
+      "A ceremonial photo is taken with the new champion standing among replicas of all nine other trophies, marking the completion of a full sweep of the tour"
+    ]
+  }
+};
+function getTraditions(eventName){return TRADITIONS[eventName]||null;}
+function rollOfHonour(eventName,limit){
+  const rows=STATE.hallOfFame.eventWinners.filter(w=>w.event===eventName);
+  const ordered=rows.slice().reverse();
+  return limit?ordered.slice(0,limit):ordered;
+}
+const SHORT_EVENT_NAMES={
+  'Pebble Beach Pro-Classic':'Pebble Beach','THE PLAYERS at Sawgrass':'The Players',
+  'The Masters':'Masters','Australian Open Invitational':'Aus Open',
+  'PGA Championship':'PGA Champ.','Sun City Team Classic':'Sun City',
+  'U.S. Open':'U.S. Open','Open de France National':'France',
+  'The Open Championship':'The Open','V TOUR Championship':'V TOUR'
+};
+function shortEventName(n){return SHORT_EVENT_NAMES[n]||n;}
+function trophyCabinetFor(name){
+  const counts={};
+  STATE.hallOfFame.eventWinners.forEach(w=>{
+    const credited=w.winnerName===name||(Array.isArray(w.winnerNames)&&w.winnerNames.includes(name));
+    if(credited)counts[w.event]=(counts[w.event]||0)+1;
+  });
+  return EVENT_DEFS.filter(d=>counts[d.name]).map(d=>{
+    const t=getTraditions(d.name);
+    return{event:d.name,icon:t?t.icon:'🏆',count:counts[d.name],short:shortEventName(d.name)};
+  });
+}
 const MAJOR_NAMES=EVENT_DEFS.filter(e=>e.major).map(e=>e.name);
 function shortMajorName(n){return{'The Masters':'Masters','PGA Championship':'PGA Champ.','U.S. Open':'U.S. Open','The Open Championship':'The Open'}[n]||n;}
 const MAJOR_POINTS=[200,170,145,125,105,90,75,60,45,35,25];
@@ -526,7 +753,7 @@ function freshState(){
       status:i===0?'current':'upcoming',rounds:[],results:null,bracket:null,
     })),
     tourChampionId:null,championGolferId:null,
-    hallOfFame:{majors:[],tourChampions:[],champions:[]},
+    hallOfFame:{majors:[],tourChampions:[],champions:[],eventWinners:[]},
     career:{},
   };
 }
@@ -625,6 +852,7 @@ function migrateState(state){
   if(!Array.isArray(state.hallOfFame.majors))state.hallOfFame.majors=[];
   if(!Array.isArray(state.hallOfFame.tourChampions))state.hallOfFame.tourChampions=[];
   if(!Array.isArray(state.hallOfFame.champions))state.hallOfFame.champions=[];
+  if(!Array.isArray(state.hallOfFame.eventWinners))state.hallOfFame.eventWinners=[];
   if(state.tourChampionId===undefined)state.tourChampionId=null;
   if(state.championGolferId===undefined)state.championGolferId=null;
   // 7) Career records: add the map if this save predates it, and make sure
@@ -925,8 +1153,29 @@ function finishEventIfDone(ev){
       if(!car.majorBests)car.majorBests={};
       const prev=car.majorBests[ev.name];
       if(!prev||r.pos<prev.pos)car.majorBests[ev.name]={pos:r.pos,tour:STATE.tourNumber};
+      if(r.pos===1){
+        if(!car.majorWinsByEvent)car.majorWinsByEvent={};
+        car.majorWinsByEvent[ev.name]=(car.majorWinsByEvent[ev.name]||0)+1;
+        // Career Grand Slam: all 4 different majors won at least once, ever.
+        if(!car.careerSlamTour&&MAJOR_NAMES.every(mn=>car.majorWinsByEvent[mn]>0)){
+          car.careerSlamTour=STATE.tourNumber;
+        }
+        // Single-Season Slam: all 4 majors won within this same tour number.
+        // Earlier majors this tour are already in hallOfFame.majors; this
+        // event's own entry gets pushed further below, so add it manually.
+        const wonThisTour=new Set(STATE.hallOfFame.majors.filter(m=>m.tour===STATE.tourNumber&&m.winnerName===r.name).map(m=>m.event));
+        wonThisTour.add(ev.name);
+        if(MAJOR_NAMES.every(mn=>wonThisTour.has(mn))){
+          if(!Array.isArray(car.seasonSlams))car.seasonSlams=[];
+          if(!car.seasonSlams.includes(STATE.tourNumber))car.seasonSlams.push(STATE.tourNumber);
+        }
+      }
     }
   });
+  // Roll of Honour: every stroke-play event (major or not) records its
+  // winner permanently, independent of the Hall of Fame's major-only list —
+  // this is what the Traditions page reads to show each trophy's history.
+  STATE.hallOfFame.eventWinners.push({tour:STATE.tourNumber,event:ev.name,winnerName:getPlayer(lb[0].pid).name,detail:toParStr(lb[0].toPar)});
   if(ev.major){
     STATE.hallOfFame.majors.push({tour:STATE.tourNumber,event:ev.name,course:getCourse(ev.courseId).name,winnerId:lb[0].pid,winnerName:getPlayer(lb[0].pid).name,toPar:lb[0].toPar});
   }
@@ -1162,6 +1411,7 @@ function finishTeamEventIfDone(ev){
       if(r.pos<=6)car.top10s++; // only 6 team spots score in this event
     });
   });
+  STATE.hallOfFame.eventWinners.push({tour:STATE.tourNumber,event:ev.name,winnerName:teamLabel(getTeam(lb[0].pid)),winnerNames:getTeam(lb[0].pid).playerIds.map(pid=>getPlayer(pid).name),detail:toParStr(lb[0].toPar)});
   const nextIdx=ev.idx+1;
   if(nextIdx<STATE.events.length){
     STATE.events[nextIdx].status='current';
@@ -1281,6 +1531,7 @@ function finaleAdvanceIfNeeded(){
     ev.status='complete';ev.winnerId=m.winnerId;
     STATE.championGolferId=m.winnerId;
     STATE.hallOfFame.champions.push({tour:STATE.tourNumber,championId:m.winnerId,championName:getPlayer(m.winnerId).name,runnerUpId:br.runnerUp,runnerUpName:getPlayer(br.runnerUp).name});
+    STATE.hallOfFame.eventWinners.push({tour:STATE.tourNumber,event:ev.name,winnerName:getPlayer(m.winnerId).name,detail:'def. '+getPlayer(br.runnerUp).name+' in the final'});
     const champCar=ensureCareer(getPlayer(m.winnerId).name);
     champCar.wins++;champCar.champTitles++;
     if(!ev.prizesAwarded){
@@ -1325,6 +1576,12 @@ function defaultCareerEntry(){
     // {pos,tour} or absent. Bounded size no matter how many seasons are
     // played, since each major just overwrites its own key when beaten.
     majorBests:{},
+    // majorWinsByEvent: fixed 4-key map (major name -> times won). Used to
+    // detect the Career Grand Slam (all 4 keys present) without rescanning
+    // full history every time.
+    majorWinsByEvent:{},
+    careerSlamTour:null, // tour number the 4th different major was won, or null
+    seasonSlams:[], // tour numbers in which all 4 majors were won in that single season
     champTitles:0,champQualifications:0,pointsTitles:0,
     bestRound:null, // {strokes,toPar,event,course,tour,round}
     earnings:0,
@@ -1455,7 +1712,7 @@ function resetPlayMatchIfNeeded(ri,mi,course){
 }
 
 /* ===== RENDERING ===== */
-const VIEWS=['dashboard','schedule','courses','roster','teams','points','hof','play','live'];
+const VIEWS=['dashboard','schedule','courses','roster','teams','points','hof','traditions','play','live'];
 function switchView(v){
   VIEWS.forEach(id=>document.getElementById('view-'+id).classList.toggle('active',id===v));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));
@@ -1469,6 +1726,7 @@ function renderView(v){
   else if(v==='teams')renderTeams();
   else if(v==='points')renderPoints();
   else if(v==='hof')renderHOF();
+  else if(v==='traditions')renderTraditions();
   else if(v==='play')renderPlay();
   else if(v==='live')renderLive();
 }
@@ -1551,11 +1809,12 @@ function renderSchedule(){
     const winner=ev.kind==='stroke'?(ev.winnerId?getPlayer(ev.winnerId):null):
       ev.kind==='team'?(ev.winnerId?{name:teamLabel(getTeam(ev.winnerId))}:null):
       (ev.bracket&&ev.bracket.champion?getPlayer(ev.bracket.champion):null);
+    const t=getTraditions(ev.name);
     return `<div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
       <div class="num" style="font-size:26px;color:var(--ink-500);width:34px;">${ev.idx+1}</div>
       <div style="flex:1;min-width:220px;">
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <h3 style="font-size:16px;">${escapeHTML(ev.name)}</h3>
+          <h3 style="font-size:16px;">${t?t.icon+' ':''}${escapeHTML(ev.name)}</h3>
           ${ev.major?'<span class="badge major">Major</span>':''}
           ${ev.kind==='final'?'<span class="badge major" style="background:rgba(168,54,42,.15);color:var(--flag-red);border-color:rgba(168,54,42,.4);">Match Play Finale</span>':''}
           ${ev.kind==='team'?'<span class="badge" style="background:rgba(61,126,166,.15);color:var(--water-blue);border:1px solid rgba(61,126,166,.4);">Team Foursomes</span>':''}
@@ -1571,6 +1830,66 @@ function renderSchedule(){
   }).join('')}
   </div>`;
   el.querySelectorAll('[data-goto-play]').forEach(b=>b.addEventListener('click',()=>switchView('play')));
+}
+
+/* ---- Traditions & Trophies ---- */
+function renderTraditions(){
+  const el=document.getElementById('view-traditions');
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">The Silverware</span><h2>Traditions &amp; Trophies</h2></div>
+    <div style="font-size:12.5px;color:var(--ink-500);max-width:420px;">Every stop on tour carries its own trophy, its own perks, and its own rituals — passed on from champion to champion as the tour's history grows.</div></div>
+  <div style="display:flex;flex-direction:column;gap:18px;">
+  ${STATE.events.map(ev=>{
+    const t=getTraditions(ev.name);
+    if(!t)return'';
+    const course=getCourse(ev.courseId);
+    const winner=ev.kind==='stroke'?(ev.winnerId?getPlayer(ev.winnerId):null):
+      ev.kind==='team'?(ev.winnerId?{name:teamLabel(getTeam(ev.winnerId))}:null):
+      (ev.bracket&&ev.bracket.champion?getPlayer(ev.bracket.champion):null);
+    return `<div class="card" style="padding:0;overflow:hidden;">
+      <div style="padding:16px 20px;background:linear-gradient(120deg,var(--turf-800),var(--turf-900));color:#fff;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:220px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="eyebrow" style="color:var(--sand-300);">${escapeHTML(ev.name)}</span>
+            ${ev.major?'<span class="badge major">Major</span>':''}
+            ${ev.kind==='final'?'<span class="badge major" style="background:rgba(168,54,42,.2);color:#fff;border-color:rgba(255,255,255,.35);">Season Finale</span>':''}
+            ${ev.kind==='team'?'<span class="badge water">Team Event</span>':''}
+          </div>
+          <h3 style="font-size:20px;margin-top:2px;">${t.icon||'🏆'} ${escapeHTML(t.trophyName)}</h3>
+          <div style="font-size:11.5px;color:var(--sand-300);margin-top:2px;font-family:'Barlow Condensed',sans-serif;letter-spacing:.03em;text-transform:uppercase;">${escapeHTML(t.trophyStyle)}</div>
+        </div>
+        ${winner?`<div style="text-align:right;"><div class="eyebrow" style="color:var(--sand-300);">Reigning Champion</div><div style="font-family:'Oswald',sans-serif;font-size:16px;">${escapeHTML(winner.name)}</div></div>`:''}
+      </div>
+      <div style="padding:16px 20px;">
+        <p style="font-size:13.5px;line-height:1.65;color:var(--ink-700);margin:0 0 16px;">${escapeHTML(t.trophyDesc)}</p>
+        <div class="grid cols-2" style="gap:20px;">
+          <div>
+            <div class="eyebrow" style="margin-bottom:8px;">Champion's Perks</div>
+            <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;">
+              ${t.perks.map(p=>`<li style="font-size:12.5px;line-height:1.5;color:var(--ink-700);">${escapeHTML(p)}</li>`).join('')}
+            </ul>
+          </div>
+          <div>
+            <div class="eyebrow" style="margin-bottom:8px;">Traditions &amp; Rituals</div>
+            <ul style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;">
+              ${t.traditions.map(tr=>`<li style="font-size:12.5px;line-height:1.5;color:var(--ink-700);">${escapeHTML(tr)}</li>`).join('')}
+            </ul>
+          </div>
+        </div>
+        ${(()=>{const roh=rollOfHonour(ev.name,5);
+          return `<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line);">
+            <div class="eyebrow" style="margin-bottom:8px;">Roll of Honour ${roh.length?'· Last '+roh.length:''}</div>
+            ${roh.length?`<div style="display:flex;flex-direction:column;gap:4px;">
+              ${roh.map(w=>`<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:3px 0;">
+                <span style="color:var(--ink-700);"><span class="num" style="color:var(--ink-500);">Tour ${w.tour}</span> — <b>${escapeHTML(w.winnerName)}</b></span>
+                <span style="color:var(--ink-500);">${escapeHTML(w.detail||'')}</span>
+              </div>`).join('')}
+            </div>`:`<div style="font-size:12px;color:var(--ink-500);">No names engraved yet — this trophy is waiting for its first champion.</div>`}
+          </div>`;})()}
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-500);">${flagEmoji(course.country)} ${escapeHTML(course.name)} · ${escapeHTML(course.loc)}</div>
+      </div>
+    </div>`;
+  }).join('')}
+  </div>`;
 }
 
 /* ---- Courses ---- */
@@ -1653,6 +1972,9 @@ function renderRoster(){
         ${h.tourChamps?`<span class="hof-badge"><span class="n">${h.tourChamps}</span><span class="l">Tour Champ</span></span>`:''}
         ${h.champGolfer?`<span class="hof-badge"><span class="n">${h.champGolfer}</span><span class="l">Champ Golfer</span></span>`:''}
       </div>`:''}
+      ${(car.careerSlamTour||(car.seasonSlams&&car.seasonSlams.length))?`<div style="margin-top:8px;padding:6px 10px;border-radius:4px;background:rgba(217,161,59,.14);border:1px solid rgba(217,161,59,.4);font-size:11px;color:#7a5a0a;font-weight:600;">
+        🏆 ${car.careerSlamTour?'Career Grand Slam (Tour '+car.careerSlamTour+')':''}${car.careerSlamTour&&car.seasonSlams&&car.seasonSlams.length?' · ':''}${(car.seasonSlams&&car.seasonSlams.length)?'Single-Season Slam: Tour '+car.seasonSlams.join(', '):''}
+      </div>`:''}
       ${car.eventsPlayed?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
         <div class="eyebrow" style="margin-bottom:6px;">Career · ${car.seasons} Season${car.seasons===1?'':'s'}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -1673,6 +1995,12 @@ function renderRoster(){
             </div>`;
           }).join('')}
         </div>
+        ${(()=>{const cab=trophyCabinetFor(p.name);
+          if(!cab.length)return'';
+          return `<div class="eyebrow" style="margin:12px 0 6px;">🎖️ Trophy Cabinet</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${cab.map(c=>`<span class="career-badge" title="${escapeHTML(c.event)}"><span class="n">${c.icon} ${c.count}</span><span class="l">${escapeHTML(c.short)}</span></span>`).join('')}
+          </div>`;})()}
       </div>`:''}
       <button class="btn ghost btn-sm" style="width:100%;margin-top:12px;" data-edit-player="${p.id}">Edit Profile</button>
     </div>`;
@@ -1988,6 +2316,26 @@ function renderHOF(){
       ${STATE.hallOfFame.champions.length?STATE.hallOfFame.champions.slice().reverse().map(c=>`<div style="font-size:13px;padding:5px 0;border-bottom:1px solid var(--line);">Tour ${c.tour} — 🏆 <b>${escapeHTML(c.championName)}</b> <span style="color:var(--ink-500);">def. ${escapeHTML(c.runnerUpName)} in the final</span></div>`).join(''):'<div class="empty-state" style="padding:20px;"><p>No Champion Golfer yet.</p></div>'}
     </div>
   </div>
+  ${(()=>{
+    const slamPlayers=STATE.players.filter(p=>{const c=STATE.career[p.name];return c&&(c.careerSlamTour||(c.seasonSlams&&c.seasonSlams.length));});
+    if(!slamPlayers.length)return'';
+    return `<div class="card" style="padding:18px;margin-top:14px;border:1px solid rgba(217,161,59,.5);background:rgba(217,161,59,.06);">
+      <div class="eyebrow" style="margin-bottom:10px;">🏆 Grand Slam Champions</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${slamPlayers.map(p=>{
+          const c=STATE.career[p.name];
+          const bits=[];
+          if(c.careerSlamTour)bits.push(`<span style="font-size:12.5px;color:var(--ink-700);">Completed the <b>Career Grand Slam</b> (all 4 majors) in Tour ${c.careerSlamTour}</span>`);
+          (c.seasonSlams||[]).forEach(tn=>bits.push(`<span style="font-size:12.5px;color:var(--ink-700);">Won all 4 majors in a single season — <b>Tour ${tn} Slam</b></span>`));
+          return `<div style="display:flex;align-items:flex-start;gap:10px;">
+            <span class="avatar" style="width:28px;height:28px;font-size:10.5px;flex-shrink:0;background:${avatarColor(p.name)};">${initialsOf(p.name)}</span>
+            <div><div style="font-family:'Oswald',sans-serif;font-size:14px;color:var(--turf-800);">${escapeHTML(p.name)}</div>
+            <div style="display:flex;flex-direction:column;gap:2px;margin-top:2px;">${bits.join('')}</div></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  })()}
   <div class="card" style="padding:18px;margin-top:14px;">
     <div class="eyebrow" style="margin-bottom:10px;">All-Time Badge Count</div>
     <div style="display:flex;flex-wrap:wrap;gap:10px;">
