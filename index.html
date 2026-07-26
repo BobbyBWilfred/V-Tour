@@ -1210,6 +1210,31 @@ function simulateMatchPlayoffHole(m,windLevel,difficulty){
   m.log.push({hole:holeIdx+1,par:holeDef.par,strokesA:hsA.strokes,strokesB:hsB.strokes,winner:m.status==='complete'?(m.winnerId===m.pidA?'A':'B'):'halve',playoff:true});
   return{hsA,hsB};
 }
+/* Manual counterparts to simulateMatchHole / simulateMatchPlayoffHole above —
+   used once both players have been played out shot-by-shot via the "hit
+   shot" control, so the scoring/clinch rules stay identical whether a hole
+   was simulated instantly or played by hand. */
+function applyManualMatchHoleOutcome(m,holeIdx,holeDef,strokesA,strokesB){
+  m.played++;
+  let winner='halve';
+  if(strokesA<strokesB){winner='A';m.aUp++;}
+  else if(strokesB<strokesA){winner='B';m.aUp--;}
+  const holesLeft=m.holes-m.played;
+  m.log.push({hole:holeIdx+1,par:holeDef.par,strokesA,strokesB,winner});
+  if(Math.abs(m.aUp)>holesLeft){
+    m.status='complete';m.winnerId=m.aUp>0?m.pidA:m.pidB;
+    const upBy=Math.abs(m.aUp);m.resultText=`${upBy}${holesLeft>0?'&'+holesLeft:' up (no more holes)'}`;
+  } else if(m.played>=m.holes){
+    if(m.aUp!==0){m.status='complete';m.winnerId=m.aUp>0?m.pidA:m.pidB;m.resultText='1 up';}
+    else{m.status='playoff';}
+  } else if(m.status==='pending'){m.status='in_progress';}
+}
+function applyManualMatchPlayoffOutcome(m,holeIdx,holeDef,strokesA,strokesB){
+  m.played++;
+  if(strokesA<strokesB){m.status='complete';m.winnerId=m.pidA;m.resultText='won in sudden death';}
+  else if(strokesB<strokesA){m.status='complete';m.winnerId=m.pidB;m.resultText='won in sudden death';}
+  m.log.push({hole:holeIdx+1,par:holeDef.par,strokesA,strokesB,winner:m.status==='complete'?(m.winnerId===m.pidA?'A':'B'):'halve',playoff:true});
+}
 function simulateWholeMatch(m){
   const course=matchCourse();const wl=windLevelForCourse(course);const diff=getEvent(9).difficulty;
   while(m.status!=='complete'){
@@ -1396,6 +1421,19 @@ function setTeamPlayHoleState(tid,state){
   PLAY_TEAM.hs=state;
   if(state)PLAY_TEAM.holeStates[tid]=state;
   else delete PLAY_TEAM.holeStates[tid];
+}
+/* Match-play (Event 10 finale) shot-by-shot control. Two independent balls
+   (side A / side B) share one hole at a time. Switching focus between the
+   two players mid-hole doesn't wipe their progress — same caching pattern
+   as PLAY/PLAY_TEAM above, keyed by side instead of player id. Once both
+   sides have holed out for the current hole, the hole is scored and both
+   states are cleared to start the next hole fresh. */
+const PLAY_MATCH={ri:null,mi:null,focusSide:null,holeStates:{A:null,B:null},windLevel:0,windDir:0};
+function resetPlayMatchIfNeeded(ri,mi,course){
+  if(PLAY_MATCH.ri!==ri||PLAY_MATCH.mi!==mi){
+    PLAY_MATCH.ri=ri;PLAY_MATCH.mi=mi;PLAY_MATCH.focusSide=null;PLAY_MATCH.holeStates={A:null,B:null};
+    PLAY_MATCH.windLevel=windLevelForCourse(course);PLAY_MATCH.windDir=windDirDeg();
+  }
 }
 
 /* ===== RENDERING ===== */
@@ -2223,38 +2261,112 @@ function matchRowHTML(ri,mi,m){
 }
 function openMatchModal(ri,mi){
   const ev=STATE.events[9];const m=ev.bracket.rounds[ri].matches[mi];
+  const course=getCourse(ev.courseId);
+  resetPlayMatchIfNeeded(ri,mi,course);
   const root=document.getElementById('modal-root');
   function draw(){
-    const course=getCourse(ev.courseId);
     const pA=getPlayer(m.pidA),pB=getPlayer(m.pidB);
-    const wl=windLevelForCourse(course);
-    root.innerHTML=`<div class="modal-overlay" id="mm-overlay"><div class="modal" style="max-width:600px;"><div class="modal-pad">
+    const holeIdx=m.played%18;const holeDef=course.holes[holeIdx];
+    root.innerHTML=`<div class="modal-overlay" id="mm-overlay"><div class="modal" style="max-width:640px;"><div class="modal-pad">
       <h3>${escapeHTML(pA.name)} vs ${escapeHTML(pB.name)}</h3>
-      <div class="modal-sub">${ev.bracket.rounds[ri].name} · ${m.holes} holes · Thru ${m.played}</div>
+      <div class="modal-sub">${ev.bracket.rounds[ri].name} · ${m.holes} holes · Thru ${m.played}${m.status==='playoff'?' · Sudden Death':''}</div>
       <div style="text-align:center;font-family:'Oswald',sans-serif;font-size:20px;margin:10px 0;">
         ${m.status==='complete'?(m.winnerId===m.pidA?escapeHTML(pA.name):escapeHTML(pB.name))+' wins '+(m.resultText||''):
           (m.aUp===0?'All Square':(m.aUp>0?escapeHTML(pA.name)+' '+m.aUp+' UP':escapeHTML(pB.name)+' '+(-m.aUp)+' UP'))}
       </div>
+      ${m.status!=='complete'?renderMatchPlayControlHTML(m,holeIdx,holeDef):''}
+      <div class="eyebrow" style="margin:14px 0 6px;">Hole-by-hole</div>
       <div style="max-height:200px;overflow-y:auto;" class="scrollbar-thin">
         ${m.log.slice().reverse().map(l=>`<div style="font-size:12.5px;padding:6px 8px;border-bottom:1px solid var(--line);">Hole ${l.hole} (Par ${l.par})${l.playoff?' · Playoff':''}: ${escapeHTML(pA.name)} ${l.strokesA} — ${escapeHTML(pB.name)} ${l.strokesB} <b>${l.winner==='halve'?'Halved':l.winner==='A'?escapeHTML(pA.name)+' wins hole':escapeHTML(pB.name)+' wins hole'}</b></div>`).join('')||'<div class="empty-state" style="padding:16px;"><p>No holes played yet.</p></div>'}
       </div>
       <div class="modal-actions">
         <button class="btn ghost" id="mm-close">Close</button>
-        ${m.status!=='complete'?`<button class="btn" id="mm-hole">Play Next Hole</button><button class="btn amber" id="mm-sim">Simulate Rest</button>`:''}
+        ${m.status!=='complete'?`<button class="btn amber" id="mm-sim">Simulate Rest of Match</button>`:''}
       </div>
     </div></div></div>`;
     document.getElementById('mm-close').addEventListener('click',closeModal);
     document.getElementById('mm-overlay').addEventListener('click',e=>{if(e.target.id==='mm-overlay')closeModal();});
-    document.getElementById('mm-hole')?.addEventListener('click',()=>{
-      if(m.status==='playoff')simulateMatchPlayoffHole(m,wl,ev.difficulty);else simulateMatchHole(m,wl,ev.difficulty);
-      if(m.status==='complete'){finaleAdvanceIfNeeded();refreshTopbar();}
-      saveState();draw();
-    });
     document.getElementById('mm-sim')?.addEventListener('click',()=>{
-      simulateWholeMatch(m);finaleAdvanceIfNeeded();refreshTopbar();saveState();draw();
+      simulateWholeMatch(m);PLAY_MATCH.focusSide=null;PLAY_MATCH.holeStates={A:null,B:null};
+      finaleAdvanceIfNeeded();refreshTopbar();saveState();draw();
     });
+    if(m.status!=='complete')wireMatchPlayControl(m,holeIdx,holeDef,draw);
   }
   draw();
+}
+/* ---- Match-play shot-by-shot control (Event 10 hit-shot panel) ---- */
+function renderMatchPlayControlHTML(m,holeIdx,holeDef){
+  const pA=getPlayer(m.pidA),pB=getPlayer(m.pidB);
+  const hsA=PLAY_MATCH.holeStates.A,hsB=PLAY_MATCH.holeStates.B;
+  const chip=(side,player,hs)=>{
+    const started=hs&&hs._forHoleIdx===holeIdx;
+    const label=started?(hs.holedOut?'· holed in '+hs.strokes:'· shot '+(hs.strokes+1)):'· on tee';
+    return`<button class="player-chip ${PLAY_MATCH.focusSide===side?'active':''}" data-match-focus="${side}">
+      <span class="avatar" style="width:18px;height:18px;font-size:8px;background:${avatarColor(player.name)};">${initialsOf(player.name)}</span>
+      ${escapeHTML(player.name)} <span style="opacity:.7;">${label}</span>
+    </button>`;
+  };
+  return`<div class="card" style="padding:12px;margin-bottom:10px;">
+    <div class="eyebrow" style="margin-bottom:8px;">Hole ${holeIdx+1} · Par ${holeDef.par} · ${holeDef.yards}y ${holeDef.water?'<span class="badge water">Water</span>':''} — pick a player to step up to the tee</div>
+    <div class="player-chip-row">${chip('A',pA,hsA)}${chip('B',pB,hsB)}</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;border-top:1px solid var(--line);padding-top:10px;">
+      <button class="btn ghost btn-sm" id="mm-sim-hole">Simulate This Hole (both players)</button>
+    </div>
+  </div>
+  <div id="mm-hole-control">${PLAY_MATCH.focusSide?renderMatchHoleControlInnerHTML(m,holeIdx,holeDef):'<div class="empty-state" style="padding:20px;"><p>Select a player above to play shot-by-shot, or simulate the hole instantly.</p></div>'}</div>`;
+}
+function renderMatchHoleControlInnerHTML(m,holeIdx,holeDef){
+  const course=matchCourse();const side=PLAY_MATCH.focusSide;
+  const player=side==='A'?getPlayer(m.pidA):getPlayer(m.pidB);
+  const hs=PLAY_MATCH.holeStates[side];
+  return`<div class="card" style="padding:16px;">
+    <div style="display:flex;justify-content:space-between;">
+      <div><div class="eyebrow">${escapeHTML(player.name)}</div><h3 style="font-size:17px;">${lieLabel(hs.lie)} · Shot ${hs.strokes+1}</h3></div>
+    </div>
+    <div style="margin-top:10px;text-align:center;">${buildHoleSVG(course,holeDef,hs,PLAY_MATCH.windLevel,PLAY_MATCH.windDir)}</div>
+    <div style="margin-top:12px;display:flex;gap:14px;background:var(--sand-200);border-radius:4px;padding:12px 14px;">
+      <div style="flex:1;"><div class="eyebrow">Lie</div><div style="color:${lieColor(hs.lie)};font-family:'Oswald',sans-serif;">${lieLabel(hs.lie)}</div></div>
+      <div style="flex:1;text-align:center;"><div class="eyebrow">${hs.lie==='green'?'To Hole':'To Pin'}</div><div class="num" style="font-size:18px;">${hs.lie==='green'?hs.puttDistanceFt+' ft':Math.round(hs.remaining)+'y'}</div></div>
+      <div style="flex:1;text-align:right;"><div class="eyebrow">Strokes</div><div class="num" style="font-size:18px;">${hs.strokes}</div></div>
+    </div>
+    <div style="margin-top:10px;max-height:100px;overflow-y:auto;display:flex;flex-direction:column-reverse;gap:5px;" class="scrollbar-thin">
+      ${hs.log.slice().reverse().map((l,i)=>`<div style="font-size:12.5px;padding:6px 9px;background:${i===0?'rgba(51,113,74,.1)':'transparent'};border-left:3px solid ${i===0?'var(--turf-600)':'var(--line)'};border-radius:3px;">${escapeHTML(l)}</div>`).join('')}
+    </div>
+    <button class="btn amber" id="mm-hit-shot" style="width:100%;margin-top:12px;padding:13px;" ${hs.holedOut?'disabled':''}>${hs.strokes===0?escapeHTML(player.name.split(' ')[0])+' Tees Off':'Hit Next Shot ('+escapeHTML(player.name.split(' ')[0])+')'}</button>
+    ${hs.holedOut?`<div style="margin-top:8px;font-size:12.5px;color:var(--ink-500);text-align:center;">${escapeHTML(player.name)} holes out in ${hs.strokes}. ${(()=>{const other=PLAY_MATCH.holeStates[side==='A'?'B':'A'];return other&&other._forHoleIdx===holeIdx&&other.holedOut?'':'Waiting on the opponent — switch players above to keep going.';})()}</div>`:''}
+  </div>`;
+}
+function wireMatchPlayControl(m,holeIdx,holeDef,draw){
+  document.querySelectorAll('[data-match-focus]').forEach(b=>b.addEventListener('click',()=>{
+    const side=b.dataset.matchFocus;PLAY_MATCH.focusSide=side;
+    const cached=PLAY_MATCH.holeStates[side];
+    if(!cached||cached._forHoleIdx!==holeIdx){
+      const state=newHoleState(holeDef);state._forHoleIdx=holeIdx;
+      PLAY_MATCH.holeStates[side]=state;
+    }
+    draw();
+  }));
+  document.getElementById('mm-sim-hole')?.addEventListener('click',()=>{
+    if(m.status==='playoff')simulateMatchPlayoffHole(m,PLAY_MATCH.windLevel,getEvent(9).difficulty);
+    else simulateMatchHole(m,PLAY_MATCH.windLevel,getEvent(9).difficulty);
+    PLAY_MATCH.focusSide=null;PLAY_MATCH.holeStates={A:null,B:null};
+    if(m.status==='complete'){finaleAdvanceIfNeeded();refreshTopbar();}
+    saveState();draw();
+  });
+  document.getElementById('mm-hit-shot')?.addEventListener('click',()=>{
+    const side=PLAY_MATCH.focusSide;const player=side==='A'?getPlayer(m.pidA):getPlayer(m.pidB);
+    const hs=PLAY_MATCH.holeStates[side];
+    playShot(hs,effectiveAttrs(player,side==='A'?m.luckA:m.luckB),getEvent(9).difficulty,PLAY_MATCH.windLevel,holeDef.water);
+    const other=side==='A'?'B':'A';const hsOther=PLAY_MATCH.holeStates[other];
+    if(hs.holedOut&&hsOther&&hsOther._forHoleIdx===holeIdx&&hsOther.holedOut){
+      if(m.status==='playoff')applyManualMatchPlayoffOutcome(m,holeIdx,holeDef,PLAY_MATCH.holeStates.A.strokes,PLAY_MATCH.holeStates.B.strokes);
+      else applyManualMatchHoleOutcome(m,holeIdx,holeDef,PLAY_MATCH.holeStates.A.strokes,PLAY_MATCH.holeStates.B.strokes);
+      PLAY_MATCH.focusSide=null;PLAY_MATCH.holeStates={A:null,B:null};
+      if(m.status==='complete'){finaleAdvanceIfNeeded();refreshTopbar();}
+      saveState();
+    }
+    draw();
+  });
 }
 
 /* ---- Live Leaderboard ("moment" view) ----
