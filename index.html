@@ -97,6 +97,36 @@ tr.me-row{background:rgba(217,161,59,.10);}
 .hof-badge .n{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:#7a5a0a;}
 .hof-badge .l{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-500);}
 @media(max-width:640px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr!important;}}
+.career-badge{display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:10px 8px;border-radius:6px;background:rgba(51,113,74,.08);border:1px solid rgba(51,113,74,.3);min-width:64px;}
+.career-badge .n{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:20px;color:var(--turf-700);}
+.career-badge .l{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-500);text-align:center;}
+.sc-wrap{overflow-x:auto;margin-top:12px;}
+.sc-table{border-collapse:collapse;font-size:11.5px;white-space:nowrap;}
+.sc-table th,.sc-table td{padding:4px 5px;text-align:center;border:1px solid var(--line);}
+.sc-table th{background:var(--turf-800);color:var(--paper-50);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:10.5px;text-transform:uppercase;}
+.sc-table td.sc-name{text-align:left;font-weight:600;font-size:12px;padding-left:9px;background:var(--paper-50);position:sticky;left:0;}
+.sc-table td.sc-par-row{background:var(--sand-200);font-size:10px;color:var(--ink-500);}
+.sc-cell{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;font-family:'Barlow Condensed',sans-serif;font-weight:700;}
+.sc-eagle .sc-cell{border-radius:50%;background:var(--board-amber);color:var(--board-black);box-shadow:0 0 0 2px var(--board-amber),inset 0 0 0 2px var(--paper-50);}
+.sc-birdie .sc-cell{border-radius:50%;background:rgba(217,161,59,.28);color:#7a5a0a;}
+.sc-par .sc-cell{color:var(--ink-700);}
+.sc-bogey .sc-cell{border-radius:3px;background:rgba(61,126,166,.15);color:var(--sky-blue);}
+.sc-dbogey .sc-cell{border-radius:3px;background:rgba(168,54,42,.18);color:var(--flag-red);}
+.sc-total{font-weight:800;background:var(--sand-200);}
+.live-badge{display:inline-flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--flag-red);}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--flag-red);animation:livepulse 1.3s ease-in-out infinite;}
+@keyframes livepulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.35;transform:scale(1.35);}}
+.live-board{background:var(--turf-900);border-radius:8px;overflow:hidden;box-shadow:var(--shadow-soft);border:1px solid var(--line-dark);}
+.live-board-head{background:linear-gradient(90deg,var(--turf-800),var(--turf-900));padding:16px 20px;border-bottom:3px solid var(--board-amber);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.live-board-head h2{color:#fff;font-size:22px;}
+.live-board-head .eyebrow{color:var(--sand-300);}
+.live-row{display:grid;grid-template-columns:44px 1fr 90px 90px 100px;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,.07);color:var(--paper-50);}
+.live-row.head{background:rgba(255,255,255,.04);font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;color:var(--sand-300);padding:8px 20px;}
+.live-row.lead{background:rgba(217,161,59,.14);}
+.live-row .pos{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;color:var(--sand-200);}
+.live-row .nm{font-size:14.5px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.live-row .num{font-size:15px;}
+@media(max-width:640px){.live-row{grid-template-columns:34px 1fr 70px 70px;}.live-row .tot{display:none;}}
 </style>
 </head>
 <body>
@@ -118,6 +148,7 @@ tr.me-row{background:rgba(217,161,59,.10);}
       <button class="nav-tab" data-view="points">Points Table</button>
       <button class="nav-tab" data-view="hof">🏆 Hall of Fame</button>
       <button class="nav-tab" data-view="play" id="tab-play" style="display:none;">This Event</button>
+      <button class="nav-tab" data-view="live" id="tab-live" style="display:none;">🔴 Live Leaderboard</button>
     </nav>
     <div class="topbar-right">
       <span class="pill" id="leader-pill">No points yet</span>
@@ -133,6 +164,7 @@ tr.me-row{background:rgba(217,161,59,.10);}
     <section class="view" id="view-points"></section>
     <section class="view" id="view-hof"></section>
     <section class="view" id="view-play"></section>
+    <section class="view" id="view-live"></section>
   </main>
   <footer>V Tour Golf Simulator · saved locally in this browser</footer>
 </div>
@@ -235,6 +267,8 @@ const EVENT_DEFS=[
   {name:'The Open Championship',courseId:'sta',major:true,kind:'stroke',difficulty:2.05,purse:17000000},
   {name:'V TOUR Championship',courseId:'pin',major:false,kind:'final',difficulty:1.5,purse:15000000},
 ];
+const MAJOR_NAMES=EVENT_DEFS.filter(e=>e.major).map(e=>e.name);
+function shortMajorName(n){return{'The Masters':'Masters','PGA Championship':'PGA Champ.','U.S. Open':'U.S. Open','The Open Championship':'The Open'}[n]||n;}
 const MAJOR_POINTS=[200,170,145,125,105,90,75,60,45,35,25];
 const NORMAL_POINTS=[120,100,85,75,65,55,45,35,25,15,10];
 const TEAM_POINTS=NORMAL_POINTS.slice(0,6);
@@ -259,6 +293,8 @@ function prizeForPosition(pos,pctTable,purse){
 function awardPrize(pid,amount){
   if(!amount)return;const st=STATE.standings[pid];if(!st)return;
   st.prizeMoney=(st.prizeMoney||0)+amount;
+  const p=getPlayer(pid);
+  if(p)ensureCareer(p.name).earnings+=amount;
 }
 
 /* ===== HELPERS ===== */
@@ -491,6 +527,7 @@ function freshState(){
     })),
     tourChampionId:null,championGolferId:null,
     hallOfFame:{majors:[],tourChampions:[],champions:[]},
+    career:{},
   };
 }
 function saveState(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(STATE));}catch(e){}}
@@ -590,6 +627,28 @@ function migrateState(state){
   if(!Array.isArray(state.hallOfFame.champions))state.hallOfFame.champions=[];
   if(state.tourChampionId===undefined)state.tourChampionId=null;
   if(state.championGolferId===undefined)state.championGolferId=null;
+  // 7) Career records: add the map if this save predates it, and make sure
+  //    every current player already has an entry (harmless if unused yet).
+  if(!state.career||typeof state.career!=='object')state.career={};
+  state.players.forEach(p=>{
+    if(!state.career[p.name]){
+      state.career[p.name]={
+        seasons:0,eventsPlayed:0,wins:0,top10s:0,
+        majors:0,majorBestPos:null,majorBestEvent:'',majorBestTour:null,
+        majorBests:{},
+        champTitles:0,champQualifications:0,pointsTitles:0,
+        bestRound:null,earnings:0,
+      };
+    }else if(!state.career[p.name].majorBests||typeof state.career[p.name].majorBests!=='object'){
+      // 7b) Older save predates per-major breakdown — seed it from the
+      // single combined majorBestPos so existing progress isn't lost.
+      const c=state.career[p.name];
+      c.majorBests={};
+      if(c.majorBestPos!=null&&c.majorBestEvent){
+        c.majorBests[c.majorBestEvent]={pos:c.majorBestPos,tour:c.majorBestTour};
+      }
+    }
+  });
   return state;
 }
 
@@ -603,7 +662,9 @@ function teamLabel(team){if(!team)return'';return team.playerIds.map(pid=>{const
 function teamEventIdx(){return STATE.events.findIndex(e=>e.kind==='team');}
 function teamEvent(){const i=teamEventIdx();return i===-1?null:STATE.events[i];}
 function teamEventStarted(){
-  const ev=teamEvent();if(!ev||!ev.rounds||!ev.rounds.length)return false;
+  const ev=teamEvent();if(!ev)return false;
+  if(ev.status==='complete'||ev.status==='current')return true;
+  if(!ev.rounds||!ev.rounds.length)return false;
   return ev.rounds.some(r=>r.scores&&Object.values(r.scores).some(arr=>arr&&arr.some(v=>v!=null)));
 }
 function teamsValidationError(){
@@ -715,6 +776,34 @@ function computeLeaderboard(ev){
   let pos=1;rows.forEach((r,i)=>{if(i>0&&r.toPar===rows[i-1].toPar)r.pos=rows[i-1].pos;else r.pos=pos;pos=i+2;});
   return rows;
 }
+/* ---- Day-to-day movement arrows ----
+   "Live" here means: as the round currently being played progresses hole
+   by hole, show whether a player has moved up/down the leaderboard
+   compared to where they stood the moment this round started (i.e. their
+   position after the *previous* round finished — "yesterday's" spot).
+   Round 1 has no prior round, so no arrows are shown there. Works for
+   both player ids and team ids since it only reads scores by id. */
+function roundStartPositions(ev,ri,ids){
+  if(ri<=0)return null;
+  const par=courseParTotal(getCourse(ev.courseId));
+  const rows=ids.map(id=>{
+    let total=0;
+    for(let r=0;r<ri;r++){if(playerThru(ev,r,id)>0)total+=playerRoundTotal(ev,r,id);}
+    return{id,toPar:total-par*ri};
+  });
+  rows.sort((a,b)=>a.toPar-b.toPar);
+  let pos=1;const map={};
+  rows.forEach((r,i)=>{if(i>0&&r.toPar===rows[i-1].toPar)r.pos=rows[i-1].pos;else r.pos=pos;pos=i+2;map[r.id]=r.pos;});
+  return map;
+}
+function posArrowHTML(startMap,id,curPos,dark){
+  if(!startMap)return'';
+  const startPos=startMap[id];
+  if(startPos==null||startPos===curPos)return'';
+  const up=startPos>curPos;
+  const color=up?(dark?'var(--turf-500)':'var(--turf-600)'):(dark?'var(--flag-red-dim)':'var(--flag-red)');
+  return`<span style="color:${color};font-size:10px;font-weight:800;margin-left:5px;white-space:nowrap;">${up?'▲':'▼'}${Math.abs(startPos-curPos)}</span>`;
+}
 function resolveLeadPlayoff(ev,rows){
   const leaders=rows.filter(r=>r.pos===1);
   if(leaders.length<2)return{rows,playoff:null};
@@ -782,6 +871,20 @@ function capEventRealism(ev){
   });
   enforceFieldSpread(STATE.players.map(p=>p.id),course,ev.rounds,3,fieldSpreadCap(ev.difficulty));
 }
+function updateBestRoundsForStroke(ev){
+  const course=getCourse(ev.courseId);const par=courseParTotal(course);
+  STATE.players.forEach(p=>{
+    for(let ri=0;ri<4;ri++){
+      if(playerThru(ev,ri,p.id)<18)continue;
+      const total=playerRoundTotal(ev,ri,p.id);
+      const toPar=total-par;
+      const car=ensureCareer(p.name);
+      if(!car.bestRound||toPar<car.bestRound.toPar||(toPar===car.bestRound.toPar&&total<car.bestRound.strokes)){
+        car.bestRound={strokes:total,toPar,event:ev.name,course:course.name,tour:STATE.tourNumber,round:ri+1};
+      }
+    }
+  });
+}
 function finishEventIfDone(ev){
   if(!ev.rounds.every((r,ri)=>roundComplete(ev,ri)))return false;
   capEventRealism(ev);
@@ -789,6 +892,7 @@ function finishEventIfDone(ev){
   const{rows,playoff}=resolveLeadPlayoff(ev,lb);
   lb=rows;ev.playoff=playoff;
   ev.results=lb;ev.status='complete';ev.winnerId=lb[0].pid;
+  updateBestRoundsForStroke(ev); // reads ev.rounds — must run before we discard it below
   lb.forEach(r=>{
     const st=STATE.standings[r.pid];
     const pts=pointsForPosition(r.pos,ev.major);
@@ -796,6 +900,17 @@ function finishEventIfDone(ev){
     st.points+=pts;
     awardPrize(r.pid,prize);
     st.history.push({eventIdx:ev.idx,eventName:ev.name,pos:r.pos,points:pts,prize,toPar:r.toPar,toParVsField:r.toPar-avgFieldToPar(lb)});
+    const car=ensureCareer(r.name);
+    car.eventsPlayed++;
+    if(r.pos===1)car.wins++;
+    if(r.pos<=10)car.top10s++;
+    if(ev.major){
+      if(car.majorBestPos==null||r.pos<car.majorBestPos){car.majorBestPos=r.pos;car.majorBestEvent=ev.name;car.majorBestTour=STATE.tourNumber;}
+      if(r.pos===1)car.majors++;
+      if(!car.majorBests)car.majorBests={};
+      const prev=car.majorBests[ev.name];
+      if(!prev||r.pos<prev.pos)car.majorBests[ev.name]={pos:r.pos,tour:STATE.tourNumber};
+    }
   });
   if(ev.major){
     STATE.hallOfFame.majors.push({tour:STATE.tourNumber,event:ev.name,course:getCourse(ev.courseId).name,winnerId:lb[0].pid,winnerName:getPlayer(lb[0].pid).name,toPar:lb[0].toPar});
@@ -810,7 +925,12 @@ function finishEventIfDone(ev){
     const ranked=STATE.players.slice().sort((a,b)=>(STATE.standings[b.id].points||0)-(STATE.standings[a.id].points||0));
     STATE.tourChampionId=ranked[0].id;
     STATE.hallOfFame.tourChampions.push({tour:STATE.tourNumber,championId:ranked[0].id,championName:ranked[0].name,points:STATE.standings[ranked[0].id].points});
+    ensureCareer(ranked[0].name).pointsTitles++;
   }
+  // The hole-by-hole scorecard only matters while the tournament is live —
+  // once it's official, keep the final results/points/prize but drop the
+  // per-hole grid so 15-20 seasons of saves stay small in localStorage.
+  ev.rounds=[];
   saveState();
   return true;
 }
@@ -1017,6 +1137,11 @@ function finishTeamEventIfDone(ev){
       st.points+=pts;
       awardPrize(pid,perPlayerPrize);
       st.history.push({eventIdx:ev.idx,eventName:ev.name,pos:r.pos,points:pts,prize:perPlayerPrize,toPar:r.toPar,toParVsField:r.toPar-avgFieldToPar(lb),team:true,teammateId:team.playerIds.find(x=>x!==pid)});
+      const pl=getPlayer(pid);
+      const car=ensureCareer(pl.name);
+      car.eventsPlayed++;
+      if(r.pos===1)car.wins++;
+      if(r.pos<=6)car.top10s++; // only 6 team spots score in this event
     });
   });
   const nextIdx=ev.idx+1;
@@ -1024,6 +1149,7 @@ function finishTeamEventIfDone(ev){
     STATE.events[nextIdx].status='current';
     if(nextIdx===9)buildFinaleBracket();
   }
+  ev.rounds=[]; // final result + points/prize are locked in; drop the hole grid
   saveState();
   return true;
 }
@@ -1037,6 +1163,12 @@ function buildFinaleBracket(){
   const qf={name:'Quarterfinals',holes:18,matches:pairs.map(([ia,ib])=>newMatch(seeds[ia],ia+1,seeds[ib],ib+1,18))};
   ev.bracket={seeds,rounds:[qf],champion:null,runnerUp:null};
   ev.status='current';
+  seeds.forEach(pid=>{
+    const p=getPlayer(pid);if(!p)return;
+    const car=ensureCareer(p.name);
+    car.champQualifications++;
+    car.eventsPlayed++;
+  });
   saveState();
 }
 function newMatch(pidA,seedA,pidB,seedB,holes){
@@ -1106,6 +1238,8 @@ function finaleAdvanceIfNeeded(){
     ev.status='complete';ev.winnerId=m.winnerId;
     STATE.championGolferId=m.winnerId;
     STATE.hallOfFame.champions.push({tour:STATE.tourNumber,championId:m.winnerId,championName:getPlayer(m.winnerId).name,runnerUpId:br.runnerUp,runnerUpName:getPlayer(br.runnerUp).name});
+    const champCar=ensureCareer(getPlayer(m.winnerId).name);
+    champCar.wins++;champCar.champTitles++;
     if(!ev.prizesAwarded){
       const purse=ev.purse||0;
       br.rounds.forEach(r=>{
@@ -1132,6 +1266,62 @@ function hofCounts(){
   STATE.hallOfFame.tourChampions.forEach(t=>{if(!map[t.championName])map[t.championName]={majors:0,tourChamps:0,champGolfer:0};map[t.championName].tourChamps++;});
   STATE.hallOfFame.champions.forEach(c=>{if(!map[c.championName])map[c.championName]={majors:0,tourChamps:0,champGolfer:0};map[c.championName].champGolfer++;});
   return map;
+}
+
+/* ===== CAREER RECORDS (persist across every Tour/season) =====
+   Keyed by player name (stable across seasons even though player ids are
+   regenerated each fresh tour). Kept intentionally compact — a dozen small
+   numeric fields per player — so 15-20 seasons of history costs only a
+   few KB in localStorage. Per-season hole-by-hole detail (event.rounds)
+   is discarded once an event is finalized; only these rollups persist. */
+function defaultCareerEntry(){
+  return{
+    seasons:0,eventsPlayed:0,wins:0,top10s:0,
+    majors:0,majorBestPos:null,majorBestEvent:'',majorBestTour:null,
+    // majorBests: fixed 4-key map (one per major, by event name) —
+    // {pos,tour} or absent. Bounded size no matter how many seasons are
+    // played, since each major just overwrites its own key when beaten.
+    majorBests:{},
+    champTitles:0,champQualifications:0,pointsTitles:0,
+    bestRound:null, // {strokes,toPar,event,course,tour,round}
+    earnings:0,
+  };
+}
+function ensureCareer(name){
+  if(!STATE.career)STATE.career={};
+  if(!STATE.career[name])STATE.career[name]=defaultCareerEntry();
+  const c=STATE.career[name];
+  // backfill any fields missing on an older save
+  const d=defaultCareerEntry();
+  Object.keys(d).forEach(k=>{if(!(k in c))c[k]=d[k];});
+  if(!c.majorBests||typeof c.majorBests!=='object')c.majorBests={};
+  return c;
+}
+function ordinal(n){
+  if(n==null)return'—';
+  const s=['th','st','nd','rd'],v=n%100;
+  return n+(s[(v-20)%10]||s[v]||s[0]);
+}
+function recordSeasonStart(){
+  STATE.career=STATE.career||{};
+  STATE.players.forEach(p=>{ensureCareer(p.name).seasons++;});
+  saveState();
+}
+function careerBestRoundEver(){
+  let best=null;
+  Object.keys(STATE.career||{}).forEach(name=>{
+    const c=STATE.career[name];
+    if(c.bestRound&&(!best||c.bestRound.toPar<best.toPar))best={...c.bestRound,name};
+  });
+  return best;
+}
+function careerBestMajorFinishEver(){
+  let best=null;
+  Object.keys(STATE.career||{}).forEach(name=>{
+    const c=STATE.career[name];
+    if(c.majorBestPos!=null&&(!best||c.majorBestPos<best.majorBestPos))best={pos:c.majorBestPos,event:c.majorBestEvent,tour:c.majorBestTour,name};
+  });
+  return best;
 }
 
 /* ===== SVG HOLE VISUAL ===== */
@@ -1195,13 +1385,13 @@ function buildHoleSVG(course,holeDef,hs,windLevel,windDir){
    group take turns rather than one finishing the hole in isolation.
    PLAY.hs is kept as a convenience alias for whichever player is currently
    focused; it always points at that player's entry in holeStates. */
-const PLAY={focusPid:null,hs:null,holeIdx:0,holeStates:{}};
+const PLAY={focusPid:null,hs:null,holeIdx:0,holeStates:{},showScorecard:false};
 function setPlayHoleState(pid,state){
   PLAY.hs=state;
   if(state)PLAY.holeStates[pid]=state;
   else delete PLAY.holeStates[pid];
 }
-const PLAY_TEAM={focusTeamId:null,hs:null,holeIdx:0,holeStates:{}};
+const PLAY_TEAM={focusTeamId:null,hs:null,holeIdx:0,holeStates:{},showScorecard:false};
 function setTeamPlayHoleState(tid,state){
   PLAY_TEAM.hs=state;
   if(state)PLAY_TEAM.holeStates[tid]=state;
@@ -1209,7 +1399,7 @@ function setTeamPlayHoleState(tid,state){
 }
 
 /* ===== RENDERING ===== */
-const VIEWS=['dashboard','schedule','courses','roster','teams','points','hof','play'];
+const VIEWS=['dashboard','schedule','courses','roster','teams','points','hof','play','live'];
 function switchView(v){
   VIEWS.forEach(id=>document.getElementById('view-'+id).classList.toggle('active',id===v));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));
@@ -1224,6 +1414,7 @@ function renderView(v){
   else if(v==='points')renderPoints();
   else if(v==='hof')renderHOF();
   else if(v==='play')renderPlay();
+  else if(v==='live')renderLive();
 }
 function refreshTopbar(){
   const ci=currentEventIdx();
@@ -1237,6 +1428,7 @@ function refreshTopbar(){
   document.getElementById('leader-pill').textContent=pillTxt;
   const finaleReached=STATE.events[9].status!=='upcoming';
   document.getElementById('tab-play').style.display=(ci!==-1||finaleReached)?'':'none';
+  document.getElementById('tab-live').style.display=(ci!==-1||finaleReached)?'':'none';
 }
 
 /* ---- Dashboard ---- */
@@ -1381,6 +1573,7 @@ function renderRoster(){
   ${ranked.map((p,i)=>{
     const o=overallOf(p.attrs);const tier=tierOf(o);const st=STATE.standings[p.id];
     const h=hof[p.name]||{majors:0,tourChamps:0,champGolfer:0};
+    const car=ensureCareer(p.name);
     const form=formLabel(playerFormScore(p.id));
     return `<div class="card" style="padding:16px;">
       <div style="display:flex;align-items:center;gap:10px;">
@@ -1403,6 +1596,27 @@ function renderRoster(){
         ${h.majors?`<span class="hof-badge"><span class="n">${h.majors}</span><span class="l">Majors</span></span>`:''}
         ${h.tourChamps?`<span class="hof-badge"><span class="n">${h.tourChamps}</span><span class="l">Tour Champ</span></span>`:''}
         ${h.champGolfer?`<span class="hof-badge"><span class="n">${h.champGolfer}</span><span class="l">Champ Golfer</span></span>`:''}
+      </div>`:''}
+      ${car.eventsPlayed?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line);">
+        <div class="eyebrow" style="margin-bottom:6px;">Career · ${car.seasons} Season${car.seasons===1?'':'s'}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="career-badge"><span class="n">${car.wins}</span><span class="l">Wins</span></span>
+          <span class="career-badge"><span class="n">${car.champQualifications}</span><span class="l">Champ. Berths</span></span>
+          <span class="career-badge"><span class="n">${car.majorBestPos?ordinal(car.majorBestPos):'—'}</span><span class="l">Best Major</span></span>
+          <span class="career-badge"><span class="n">${car.bestRound?car.bestRound.strokes:'—'}</span><span class="l">Best Round</span></span>
+        </div>
+        <div style="font-size:11px;color:var(--turf-700);font-weight:600;margin-top:8px;">💰 $${(car.earnings||0).toLocaleString()} career earnings</div>
+        <div class="eyebrow" style="margin:10px 0 6px;">The 4 Majors · Career Best Finish</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          ${MAJOR_NAMES.map(mn=>{
+            const mb=car.majorBests&&car.majorBests[mn];
+            const won=mb&&mb.pos===1;
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 9px;border-radius:4px;background:${won?'rgba(217,161,59,.14)':'rgba(51,113,74,.06)'};border:1px solid ${won?'rgba(217,161,59,.4)':'var(--line)'};">
+              <span style="font-size:11px;color:var(--ink-700);">${escapeHTML(shortMajorName(mn))}</span>
+              <span class="num" style="font-weight:700;font-size:14px;color:${won?'#7a5a0a':'var(--turf-800)'};">${mb?ordinal(mb.pos):'—'}</span>
+            </div>`;
+          }).join('')}
+        </div>
       </div>`:''}
       <button class="btn ghost btn-sm" style="width:100%;margin-top:12px;" data-edit-player="${p.id}">Edit Profile</button>
     </div>`;
@@ -1468,7 +1682,11 @@ function openPlayerEditModal(pid){
     document.getElementById('pe-save').addEventListener('click',()=>{
       const nm=draft.name.trim();
       if(!nm){showToast('Name cannot be empty.',true);return;}
+      const oldName=p.name;
       p.name=nm;p.country=draft.country;p.attrs={...draft.attrs};
+      if(oldName!==nm&&STATE.career&&STATE.career[oldName]&&!STATE.career[nm]){
+        STATE.career[nm]=STATE.career[oldName];delete STATE.career[oldName];
+      }
       saveState();closeModal();showToast(`${p.name}'s profile updated.`);renderRoster();refreshTopbar();
     });
   }
@@ -1529,7 +1747,7 @@ function renderTeamPlay(el,ev){
   const ri=ev.__ri;
   const lb=computeTeamLeaderboard(ev);
   el.innerHTML=`<div class="section-head"><div><span class="eyebrow">Foursomes · ${escapeHTML(course.name)} · ${escapeHTML(course.loc)}</span><h2>${escapeHTML(ev.name)}</h2></div>
-    <div><button class="btn ghost btn-sm" id="sim-whole-team-event">Simulate Entire Event</button></div></div>
+    <div style="display:flex;gap:8px;"><button class="btn ghost btn-sm" id="toggle-team-scorecard">${PLAY_TEAM.showScorecard?'Hide':'Show'} Scorecard</button><button class="btn ghost btn-sm" id="sim-whole-team-event">Simulate Entire Event</button></div></div>
   <div class="grid cols-2" style="align-items:start;">
     <div>
       <div class="card" style="padding:14px;margin-bottom:12px;">
@@ -1545,10 +1763,13 @@ function renderTeamPlay(el,ev){
       <div class="eyebrow" style="margin-bottom:8px;">Leaderboard · Thru ${lb.length?Math.max(...lb.map(r=>r.roundsPlayed<4?r.thru:18)):0}</div>
       ${ev.playoff?`<div style="font-size:12px;color:var(--flag-red);margin-bottom:8px;">🏆 ${escapeHTML(teamLabel(getTeam(ev.playoff.winnerId)))} won a ${ev.playoff.holes.length}-hole playoff over ${ev.playoff.leaderIds.length-1} other${ev.playoff.leaderIds.length>2?'s':''} tied at the lead.</div>`:''}
       <table><thead><tr><th>Pos</th><th>Team</th><th>To Par</th><th>Thru</th><th>Total</th></tr></thead><tbody>
-      ${lb.map(r=>`<tr><td>${r.pos}</td><td>${escapeHTML(r.name)}</td><td class="num" style="color:${r.toPar<0?'var(--flag-red)':'inherit'};">${toParStr(r.toPar)}</td><td>${r.roundsPlayed>=4?'F':`R${r.roundsPlayed+1} · ${r.thru}`}</td><td class="num">${r.total}</td></tr>`).join('')}
-      </tbody></table>
-    </div>
+      ${(()=>{const startMap=roundStartPositions(ev,ri,STATE.teams.map(t=>t.id));return lb.map(r=>`<tr><td>${r.pos}${posArrowHTML(startMap,r.pid,r.pos,false)}</td><td>${escapeHTML(r.name)}</td><td class="num" style="color:${r.toPar<0?'var(--flag-red)':'inherit'};">${toParStr(r.toPar)}</td><td>${r.roundsPlayed>=4?'F':`R${r.roundsPlayed+1} · ${r.thru}`}</td><td class="num">${r.total}</td></tr>`).join('');})()}
+    <div class="eyebrow" style="margin-bottom:4px;">Round ${ri+1} Scorecard</div>
+    <div id="team-scorecard-wrap">${PLAY_TEAM.showScorecard?renderScorecardHTML(ev,ri,'team'):''}</div>
   </div>`;
+  document.getElementById('toggle-team-scorecard').addEventListener('click',()=>{
+    PLAY_TEAM.showScorecard=!PLAY_TEAM.showScorecard;renderPlay();
+  });
   el.querySelectorAll('[data-team-round]').forEach(b=>b.addEventListener('click',()=>{
     const r=parseInt(b.dataset.teamRound,10);
     if(r>0&&!teamRoundComplete(ev,r-1)){showToast('Finish the previous round first.',true);return;}
@@ -1723,6 +1944,29 @@ function renderHOF(){
       </div>`;
     }).join('')||'<div class="empty-state" style="padding:20px;width:100%;"><p>No badges awarded yet — play through the tour to build history.</p></div>'}
     </div>
+  </div>
+  <div class="grid cols-2" style="margin-top:14px;">
+    <div class="card" style="padding:18px;">
+      <div class="eyebrow" style="margin-bottom:10px;">All-Time Bests</div>
+      ${(()=>{const br=careerBestRoundEver();return br?`<div style="margin-bottom:12px;">
+        <div style="font-family:'Oswald',sans-serif;font-size:14px;color:var(--turf-800);">Lowest Round Ever</div>
+        <div style="font-size:12.5px;color:var(--ink-700);padding:3px 0;"><b>${escapeHTML(br.name)}</b> shot <span class="num">${br.strokes}</span> (${toParStr(br.toPar)}) — Tour ${br.tour}, ${escapeHTML(br.event)}, Round ${br.round} <span style="color:var(--ink-500);">(${escapeHTML(br.course)})</span></div>
+      </div>`:`<div style="font-size:12px;color:var(--ink-500);margin-bottom:12px;">No rounds recorded yet.</div>`;})()}
+      ${(()=>{const bm=careerBestMajorFinishEver();return bm?`<div>
+        <div style="font-family:'Oswald',sans-serif;font-size:14px;color:var(--turf-800);">Best Major Finish</div>
+        <div style="font-size:12.5px;color:var(--ink-700);padding:3px 0;"><b>${escapeHTML(bm.name)}</b> — ${ordinal(bm.pos)} at the ${escapeHTML(bm.event)} <span style="color:var(--ink-500);">(Tour ${bm.tour})</span></div>
+      </div>`:`<div style="font-size:12px;color:var(--ink-500);">No majors played yet.</div>`;})()}
+    </div>
+    <div class="card scrollbar-thin" style="padding:4px;overflow-x:auto;">
+      <div class="eyebrow" style="margin:14px 0 6px 14px;">Career Records — All Seasons</div>
+      <table><thead><tr><th>Player</th><th>Seasons</th><th>Wins</th><th>Majors</th><th>Champ. Titles</th><th>Champ. Berths</th><th>Best Major</th><th>Best Round</th><th>Earnings</th></tr></thead>
+      <tbody>
+      ${Object.keys(STATE.career||{}).filter(name=>STATE.career[name].eventsPlayed>0).sort((a,b)=>STATE.career[b].wins-STATE.career[a].wins||STATE.career[b].earnings-STATE.career[a].earnings).map(name=>{
+        const c=STATE.career[name];
+        return `<tr><td>${escapeHTML(name)}</td><td class="num">${c.seasons}</td><td class="num">${c.wins}</td><td class="num">${c.majors}</td><td class="num">${c.champTitles}</td><td class="num">${c.champQualifications}</td><td class="num">${c.majorBestPos?ordinal(c.majorBestPos):'—'}</td><td class="num">${c.bestRound?c.bestRound.strokes+' ('+toParStr(c.bestRound.toPar)+')':'—'}</td><td class="num">$${(c.earnings||0).toLocaleString()}</td></tr>`;
+      }).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--ink-500);padding:16px;">No career history yet — finish an event to start the record book.</td></tr>'}
+      </tbody></table>
+    </div>
   </div>`;
 }
 
@@ -1744,7 +1988,7 @@ function renderStrokePlay(el,ev){
   const ri=ev.__ri;
   const lb=computeLeaderboard(ev);
   el.innerHTML=`<div class="section-head"><div><span class="eyebrow">${ev.major?'Major Championship · ':''}${escapeHTML(course.name)} · ${escapeHTML(course.loc)}</span><h2>${escapeHTML(ev.name)}</h2></div>
-    <div><button class="btn ghost btn-sm" id="sim-whole-event">Simulate Entire Event</button></div></div>
+    <div style="display:flex;gap:8px;"><button class="btn ghost btn-sm" id="toggle-scorecard">${PLAY.showScorecard?'Hide':'Show'} Scorecard</button><button class="btn ghost btn-sm" id="sim-whole-event">Simulate Entire Event</button></div></div>
   <div class="grid cols-2" style="align-items:start;">
     <div>
       <div class="card" style="padding:14px;margin-bottom:12px;">
@@ -1760,10 +2004,17 @@ function renderStrokePlay(el,ev){
       <div class="eyebrow" style="margin-bottom:8px;">Leaderboard · Thru ${lb.length?Math.max(...lb.map(r=>r.roundsPlayed<4?r.thru:18)):0}</div>
       ${ev.playoff?`<div style="font-size:12px;color:var(--flag-red);margin-bottom:8px;">🏆 ${escapeHTML(getPlayer(ev.playoff.winnerId).name)} won a ${ev.playoff.holes.length}-hole playoff over ${ev.playoff.leaderIds.length-1} other${ev.playoff.leaderIds.length>2?'s':''} tied at the lead.</div>`:''}
       <table><thead><tr><th>Pos</th><th>Player</th><th>To Par</th><th>Thru</th><th>Total</th></tr></thead><tbody>
-      ${lb.map(r=>`<tr><td>${r.pos}</td><td>${escapeHTML(r.name)}</td><td class="num" style="color:${r.toPar<0?'var(--flag-red)':'inherit'};">${toParStr(r.toPar)}</td><td>${r.roundsPlayed>=4?'F':`R${r.roundsPlayed+1} · ${r.thru}`}</td><td class="num">${r.total}</td></tr>`).join('')}
+      ${(()=>{const startMap=roundStartPositions(ev,ri,STATE.players.map(p=>p.id));return lb.map(r=>`<tr><td>${r.pos}${posArrowHTML(startMap,r.pid,r.pos,false)}</td><td>${escapeHTML(r.name)}</td><td class="num" style="color:${r.toPar<0?'var(--flag-red)':'inherit'};">${toParStr(r.toPar)}</td><td>${r.roundsPlayed>=4?'F':`R${r.roundsPlayed+1} · ${r.thru}`}</td><td class="num">${r.total}</td></tr>`).join('');})()}
       </tbody></table>
     </div>
+  </div>
+  <div class="card" style="padding:14px;margin-top:14px;${PLAY.showScorecard?'':'display:none;'}" id="scorecard-card">
+    <div class="eyebrow" style="margin-bottom:4px;">Round ${ri+1} Scorecard</div>
+    <div id="scorecard-wrap">${PLAY.showScorecard?renderScorecardHTML(ev,ri,'player'):''}</div>
   </div>`;
+  document.getElementById('toggle-scorecard').addEventListener('click',()=>{
+    PLAY.showScorecard=!PLAY.showScorecard;renderPlay();
+  });
   el.querySelectorAll('[data-round]').forEach(b=>b.addEventListener('click',()=>{
     const r=parseInt(b.dataset.round,10);
     if(r>0&&!roundComplete(ev,r-1)){showToast('Finish the previous round first.',true);return;}
@@ -1775,6 +2026,54 @@ function renderStrokePlay(el,ev){
   renderStrokePanel(ev,ri);
 }
 function windMphDisplay(level){const[a,b]=WIND_MPH[level];return a+'-'+b;}
+/* ---- Round-by-round scorecard (only meaningful while a tournament is
+   actually in progress — ev.rounds is wiped once the event is finalized,
+   so this view naturally disappears once the tournament is over). ---- */
+function scoreClass(diff){
+  if(diff<=-2)return'sc-eagle';
+  if(diff===-1)return'sc-birdie';
+  if(diff===0)return'sc-par';
+  if(diff===1)return'sc-bogey';
+  return'sc-dbogey';
+}
+function renderScorecardHTML(ev,ri,mode){
+  const course=getCourse(ev.courseId);
+  const rnd=ev.rounds[ri];
+  if(!rnd)return`<div class="empty-state" style="padding:22px;"><p>Round not started.</p></div>`;
+  const entities=mode==='team'?STATE.teams.map(t=>({id:t.id,name:teamLabel(t)})):STATE.players.map(p=>({id:p.id,name:p.name}));
+  const started=entities.filter(e=>rnd.scores[e.id]&&rnd.scores[e.id].some(v=>v!=null));
+  if(!started.length)return`<div class="empty-state" style="padding:22px;"><p>No scores posted yet this round.</p></div>`;
+  const front=course.holes.slice(0,9),back=course.holes.slice(9);
+  const outPar=front.reduce((s,h)=>s+h.par,0),inPar=back.reduce((s,h)=>s+h.par,0);
+  const rows=started.map(e=>{
+    const arr=rnd.scores[e.id];
+    let out=0,inn=0,outThruPar=0,inThruPar=0;
+    for(let h=0;h<9;h++){if(arr[h]!=null){out+=arr[h];outThruPar+=front[h].par;}}
+    for(let h=9;h<18;h++){if(arr[h]!=null){inn+=arr[h];inThruPar+=back[h-9].par;}}
+    const total=out+inn,parThru=outThruPar+inThruPar;
+    return{...e,arr,out,inn,total,toParThru:total-parThru,thru:arr.filter(v=>v!=null).length};
+  });
+  rows.sort((a,b)=>a.toParThru-b.toParThru);
+  const cell=(strokes,par)=>{
+    if(strokes==null)return`<td>—</td>`;
+    return`<td class="${scoreClass(strokes-par)}"><span class="sc-cell">${strokes}</span></td>`;
+  };
+  return`<div class="sc-wrap"><table class="sc-table">
+  <thead>
+    <tr><th style="text-align:left;">Hole</th>${front.map((h,i)=>`<th>${i+1}</th>`).join('')}<th>OUT</th>${back.map((h,i)=>`<th>${i+10}</th>`).join('')}<th>IN</th><th>TOT</th></tr>
+    <tr><td class="sc-par-row" style="text-align:left;">Par</td>${front.map(h=>`<td class="sc-par-row">${h.par}</td>`).join('')}<td class="sc-par-row">${outPar}</td>${back.map(h=>`<td class="sc-par-row">${h.par}</td>`).join('')}<td class="sc-par-row">${inPar}</td><td class="sc-par-row">${outPar+inPar}</td></tr>
+  </thead>
+  <tbody>
+  ${rows.map(r=>`<tr>
+    <td class="sc-name">${escapeHTML(r.name)}</td>
+    ${front.map((h,i)=>cell(r.arr[i],h.par)).join('')}
+    <td class="sc-total num">${r.out||'—'}</td>
+    ${back.map((h,i)=>cell(r.arr[i+9],h.par)).join('')}
+    <td class="sc-total num">${r.inn||'—'}</td>
+    <td class="sc-total num" style="color:${r.toParThru<0?'var(--flag-red)':'inherit'};">${r.thru?toParStr(r.toParThru):'—'}</td>
+  </tr>`).join('')}
+  </tbody></table></div>`;
+}
 function renderStrokePanel(ev,ri){
   const panel=document.getElementById('play-panel');
   const rnd=ev.rounds[ri];
@@ -1958,6 +2257,92 @@ function openMatchModal(ri,mi){
   draw();
 }
 
+/* ---- Live Leaderboard ("moment" view) ----
+   Read-only, high-visibility board for whichever event is currently in
+   progress. Purely a presentation layer over the same leaderboard data
+   already computed for the Play tab — no separate state to keep in sync. */
+function renderLive(){
+  const el=document.getElementById('view-live');
+  const ci=currentEventIdx();
+  const ev=ci!==-1?STATE.events[ci]:STATE.events[9];
+  if(!ev||(ev.status==='upcoming'&&ev.idx!==9)){
+    el.innerHTML=`<div class="empty-state"><h3>No tournament in progress</h3><p>Head to Schedule to see what's up next.</p></div>`;return;
+  }
+  if(ev.kind==='final')renderLiveBracket(el,ev);
+  else if(ev.kind==='team')renderLiveBoard(el,ev,'team');
+  else renderLiveBoard(el,ev,'player');
+}
+function renderLiveBoard(el,ev,mode){
+  const course=getCourse(ev.courseId);
+  const lb=mode==='team'?computeTeamLeaderboard(ev):computeLeaderboard(ev);
+  const live=ev.status!=='complete';
+  const thru=lb.length?Math.max(...lb.map(r=>r.roundsPlayed<4?r.thru:18)):0;
+  const roundNo=lb.length?Math.min(4,Math.max(...lb.map(r=>r.roundsPlayed))+1):1;
+  el.innerHTML=`<div class="live-board">
+    <div class="live-board-head">
+      <div>
+        <span class="eyebrow">${ev.major?'★ Major Championship · ':''}${escapeHTML(course.name)} · ${escapeHTML(course.loc)}</span>
+        <h2>${escapeHTML(ev.name)}</h2>
+      </div>
+      <div style="text-align:right;">
+        ${live?`<div class="live-badge"><span class="live-dot"></span>LIVE · Round ${Math.min(roundNo,4)} · Thru ${thru}</div>`:`<div class="live-badge" style="color:var(--sand-300);"><span style="width:8px;height:8px;border-radius:50%;background:var(--sand-300);display:inline-block;"></span>FINAL</div>`}
+      </div>
+    </div>
+    ${ev.playoff?`<div style="padding:10px 20px;background:rgba(217,161,59,.14);color:var(--sand-200);font-size:12.5px;">🏆 ${escapeHTML(mode==='team'?teamLabel(getTeam(ev.playoff.winnerId)):getPlayer(ev.playoff.winnerId).name)} won a ${ev.playoff.holes.length}-hole playoff.</div>`:''}
+    <div class="live-row head"><div>Pos</div><div>${mode==='team'?'Team':'Player'}</div><div>Today</div><div>Thru</div><div class="tot">Total</div></div>
+    ${(()=>{
+      const ids=mode==='team'?STATE.teams.map(t=>t.id):STATE.players.map(p=>p.id);
+      const startMap=roundStartPositions(ev,Math.min(roundNo,4)-1,ids);
+      return lb.map((r,i)=>{
+      const roundStart=r.roundsPlayed<4?r.roundsPlayed:3;
+      const parVal=courseParTotal(course);
+      // "today" = to-par for the round currently in progress (or last played)
+      const todayTotal=mode==='team'?playerRoundTotal(ev,roundStart,r.pid):playerRoundTotal(ev,roundStart,r.pid);
+      const todayThru=playerThru(ev,roundStart,r.pid);
+      const todayToPar=todayThru>0?todayTotal-course.holes.slice(0,todayThru).reduce((s,h)=>s+h.par,0):null;
+      return`<div class="live-row ${r.pos===1?'lead':''}">
+        <div class="pos num">${r.pos}${posArrowHTML(startMap,r.pid,r.pos,true)}</div>
+        <div class="nm"><span class="avatar" style="width:26px;height:26px;font-size:10px;background:${avatarColor(r.name)};">${initialsOf(r.name)}</span>${escapeHTML(r.name)}</div>
+        <div class="num" style="color:${todayToPar!=null&&todayToPar<0?'var(--board-amber)':'inherit'};">${todayToPar!=null?toParStr(todayToPar):'—'}</div>
+        <div class="num">${r.roundsPlayed>=4?'F':r.thru>0?r.thru:'—'}</div>
+        <div class="tot num" style="font-size:17px;color:${r.toPar<0?'var(--board-amber)':'#fff'};">${toParStr(r.toPar)}</div>
+      </div>`;
+    }).join('');
+    })()}
+  </div>`;
+}
+function renderLiveBracket(el,ev){
+  const course=getCourse(ev.courseId);
+  if(!ev.bracket){el.innerHTML=`<div class="empty-state"><h3>Finale not seeded yet</h3><p>The top 8 will be seeded once Event 9 wraps up.</p></div>`;return;}
+  const br=ev.bracket;const round=br.rounds[br.rounds.length-1];
+  el.innerHTML=`<div class="live-board">
+    <div class="live-board-head">
+      <div><span class="eyebrow">${escapeHTML(course.name)} · ${escapeHTML(course.loc)} · Match Play</span><h2>${escapeHTML(ev.name)}</h2></div>
+      <div>${br.champion?`<div class="live-badge" style="color:var(--sand-300);"><span style="width:8px;height:8px;border-radius:50%;background:var(--sand-300);display:inline-block;"></span>FINAL</div>`:`<div class="live-badge"><span class="live-dot"></span>LIVE · ${escapeHTML(round.name)}</div>`}</div>
+    </div>
+    ${br.champion?`<div style="padding:16px 20px;background:rgba(217,161,59,.14);color:#fff;">
+      <div class="eyebrow" style="color:var(--sand-300);">Champion Golfer of the Year</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:20px;">🏆 ${escapeHTML(getPlayer(br.champion).name)}</div>
+      <div style="font-size:12.5px;color:var(--sand-300);margin-top:2px;">Defeated ${escapeHTML(getPlayer(br.runnerUp).name)} in the Final.</div>
+    </div>`:''}
+    <div style="padding:14px 20px;display:flex;flex-direction:column;gap:8px;">
+      ${round.matches.map(m=>{
+        const pA=getPlayer(m.pidA),pB=getPlayer(m.pidB);
+        const done=m.status==='complete';
+        const statusTxt=done?(m.winnerId===m.pidA?escapeHTML(pA.name):escapeHTML(pB.name))+' wins '+(m.resultText||''):
+          (m.status==='pending'?'Not started':`Thru ${m.played} · ${m.aUp===0?'All Square':(m.aUp>0?escapeHTML(pA.name)+' '+m.aUp+' up':escapeHTML(pB.name)+' '+(-m.aUp)+' up')}`);
+        return`<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:5px;color:#fff;">
+          <span class="seed-num">${m.seedA}</span><span style="min-width:120px;font-weight:${done&&m.winnerId===m.pidA?'700':'400'};">${escapeHTML(pA.name)}</span>
+          <span style="color:var(--sand-300);">vs</span>
+          <span class="seed-num">${m.seedB}</span><span style="min-width:120px;font-weight:${done&&m.winnerId===m.pidB?'700':'400'};">${escapeHTML(pB.name)}</span>
+          <span style="flex:1;font-size:12.5px;color:var(--sand-300);">${statusTxt}</span>
+          ${done?'<span class="badge status-complete">Final</span>':''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
 /* ===== MODAL / RESET ===== */
 function closeModal(){document.getElementById('modal-root').innerHTML='';}
 function wireNav(){
@@ -1968,7 +2353,7 @@ function openResetModal(){
   const root=document.getElementById('modal-root');
   root.innerHTML=`<div class="modal-overlay" id="rs-overlay"><div class="modal" style="max-width:480px;border-top-color:var(--flag-red);"><div class="modal-pad">
     <h3>Start a New Tour?</h3>
-    <div class="modal-sub">Choose whether to keep your all-time Hall of Fame history.</div>
+    <div class="modal-sub">Choose whether to keep your all-time Hall of Fame history and player career stats (wins, majors, qualifications, best round, etc).</div>
     <div class="modal-actions" style="justify-content:flex-start;flex-wrap:wrap;">
       <button class="btn ghost" id="rs-cancel">Cancel</button>
       <button class="btn amber" id="rs-soft">New Tour (keep Hall of Fame)</button>
@@ -1978,19 +2363,25 @@ function openResetModal(){
   document.getElementById('rs-cancel').addEventListener('click',closeModal);
   document.getElementById('rs-overlay').addEventListener('click',e=>{if(e.target.id==='rs-overlay')closeModal();});
   document.getElementById('rs-soft').addEventListener('click',()=>{
-    const hof=STATE.hallOfFame;const tourNum=STATE.tourNumber+1;
-    STATE=freshState();STATE.tourNumber=tourNum;STATE.hallOfFame=hof;
-    saveState();closeModal();refreshTopbar();switchView('dashboard');showToast(`New tour started — Tour ${tourNum}.`);
+    const hof=STATE.hallOfFame;const career=STATE.career;const tourNum=STATE.tourNumber+1;
+    STATE=freshState();STATE.tourNumber=tourNum;STATE.hallOfFame=hof;STATE.career=career||{};
+    recordSeasonStart();
+    saveState();closeModal();refreshTopbar();switchView('dashboard');showToast(`New tour started — Tour ${tourNum}. Career records carried over.`);
   });
   document.getElementById('rs-hard').addEventListener('click',()=>{
-    STATE=freshState();saveState();closeModal();refreshTopbar();switchView('dashboard');showToast('Full reset — Tour 1.');
+    STATE=freshState();recordSeasonStart();saveState();closeModal();refreshTopbar();switchView('dashboard');showToast('Full reset — Tour 1. All records wiped.');
   });
 }
 
 /* ===== INIT ===== */
 function init(){
   const loaded=loadState();
-  STATE=loaded?migrateState(loaded):freshState();
+  if(loaded){
+    STATE=migrateState(loaded);
+  }else{
+    STATE=freshState();
+    recordSeasonStart();
+  }
   saveState();
   wireNav();refreshTopbar();switchView('dashboard');
 }
