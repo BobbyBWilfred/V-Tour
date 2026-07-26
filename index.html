@@ -408,6 +408,19 @@ function simulateFullHole(holeDef,attrs,difficulty,windLvl){
   while(!hs.holedOut)playShot(hs,attrs,difficulty,windLvl,holeDef.water);
   return hs;
 }
+/* Skill compression: how much of a player's raw rating gap from the field
+   average actually carries through into shot resolution. 1.0 = full spread
+   (a 90-rated player plays exactly 14 pts better than a 76-rated player).
+   Lower values keep the field closer together for tighter competition
+   without erasing the ranking — better players still win more often, just
+   not by a landslide every time. Tune this single number to loosen/tighten
+   the whole tour's competitiveness. */
+const SKILL_COMPRESSION=0.6;
+function fieldAvgAttrs(){
+  const avg={};
+  ATTRS.forEach(a=>{avg[a.key]=STATE.players.reduce((s,p)=>s+p.attrs[a.key],0)/STATE.players.length;});
+  return avg;
+}
 function effectiveAttrs(player,roundLuck,paceBonus){
   // Dynamic form: recent results vs field bump/dent attributes slightly.
   // roundLuck: a per-player, per-round "day" value (see rollRoundLuck()) that
@@ -419,8 +432,10 @@ function effectiveAttrs(player,roundLuck,paceBonus){
   const form=playerFormScore(player.id);
   const luck=typeof roundLuck==='number'?roundLuck:0;
   const pace=typeof paceBonus==='number'?paceBonus:0;
+  const avg=fieldAvgAttrs();
   const out={};ATTRS.forEach(a=>{
-    let v=player.attrs[a.key]+form*2.5+luck*5.5+pace;
+    const compressed=avg[a.key]+(player.attrs[a.key]-avg[a.key])*SKILL_COMPRESSION;
+    let v=compressed+form*2.5+luck*5.5+pace;
     out[a.key]=clamp(Math.round(v),1,99);
   });
   return out;
@@ -677,6 +692,8 @@ function capRoundRealism(ev,ri){
       excess--;
     }
   });
+  const spreadCap=roundsPlayed>=4?fieldSpreadCap(ev.difficulty):Math.round(fieldSpreadCap(ev.difficulty)*roundsPlayed/4)+3;
+  enforceFieldSpread(STATE.players.map(p=>p.id),course,ev.rounds,ri,spreadCap);
   ev.rounds[ri].__capped=true;
 }
 function computeLeaderboard(ev){
@@ -763,6 +780,7 @@ function capEventRealism(ev){
       excess--;
     }
   });
+  enforceFieldSpread(STATE.players.map(p=>p.id),course,ev.rounds,3,fieldSpreadCap(ev.difficulty));
 }
 function finishEventIfDone(ev){
   if(!ev.rounds.every((r,ri)=>roundComplete(ev,ri)))return false;
@@ -797,6 +815,42 @@ function finishEventIfDone(ev){
   return true;
 }
 function avgFieldToPar(lb){const s=lb.reduce((a,r)=>a+r.toPar,0);return s/lb.length;}
+/* Field-spread control: on top of each competitor's own absolute ceiling
+   (capRoundRealism/capEventRealism above), this keeps the *gap* between
+   whoever's leading and whoever's last from blowing out. Only trims strokes
+   off the trailing competitors' worst holes (never better than eagle) to
+   pull them back within reach of the leader — the leader's score is never
+   touched, so a great round is still a great round, it just isn't a
+   32-stroke landslide over the last-place finisher. */
+const FIELD_SPREAD_BASE=11;
+function fieldSpreadCap(difficulty){return Math.round(FIELD_SPREAD_BASE+difficulty*2.4);}
+function enforceFieldSpread(ids,course,rounds,uptoRi,maxSpread){
+  const totals=ids.map(id=>{
+    let total=0;
+    for(let r=0;r<=uptoRi;r++)for(let hi=0;hi<18;hi++)total+=rounds[r].scores[id][hi]-course.holes[hi].par;
+    return{id,total};
+  });
+  const best=Math.min(...totals.map(t=>t.total));
+  totals.forEach(t=>{
+    const gap=t.total-best;
+    if(gap<=maxSpread)return;
+    let excess=gap-maxSpread,guard=0;
+    const holes=[];
+    for(let r=0;r<=uptoRi;r++)for(let hi=0;hi<18;hi++)holes.push({r,hi,par:course.holes[hi].par});
+    while(excess>0&&guard<400){
+      guard++;
+      let worstIdx=-1,worstDiff=-Infinity;
+      holes.forEach((h,idx)=>{
+        const diff=rounds[h.r].scores[t.id][h.hi]-h.par;
+        if(diff>worstDiff){worstDiff=diff;worstIdx=idx;}
+      });
+      if(worstDiff<=-2)break;
+      const h=holes[worstIdx];
+      rounds[h.r].scores[t.id][h.hi]-=1;
+      excess--;
+    }
+  });
+}
 
 /* ===== TEAM (FOURSOMES) LIFECYCLE — Sun City Team Classic =====
    Same 4-round stroke-play skeleton as the individual events above, but the
@@ -870,6 +924,8 @@ function capTeamRoundRealism(ev,ri){
       excess--;
     }
   });
+  const spreadCap=roundsPlayed>=4?fieldSpreadCap(ev.difficulty):Math.round(fieldSpreadCap(ev.difficulty)*roundsPlayed/4)+3;
+  enforceFieldSpread(STATE.teams.map(t=>t.id),course,ev.rounds,ri,spreadCap);
   ev.rounds[ri].__capped=true;
 }
 function computeTeamLeaderboard(ev){
@@ -942,6 +998,7 @@ function capTeamEventRealism(ev){
       excess--;
     }
   });
+  enforceFieldSpread(STATE.teams.map(t=>t.id),course,ev.rounds,3,fieldSpreadCap(ev.difficulty));
 }
 function finishTeamEventIfDone(ev){
   if(!ev.rounds.every((r,ri)=>teamRoundComplete(ev,ri)))return false;
