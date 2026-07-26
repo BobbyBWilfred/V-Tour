@@ -114,6 +114,7 @@ tr.me-row{background:rgba(217,161,59,.10);}
       <button class="nav-tab" data-view="schedule">Schedule</button>
       <button class="nav-tab" data-view="courses">Courses</button>
       <button class="nav-tab" data-view="roster">Players</button>
+      <button class="nav-tab" data-view="teams">Teams</button>
       <button class="nav-tab" data-view="points">Points Table</button>
       <button class="nav-tab" data-view="hof">🏆 Hall of Fame</button>
       <button class="nav-tab" data-view="play" id="tab-play" style="display:none;">This Event</button>
@@ -128,6 +129,7 @@ tr.me-row{background:rgba(217,161,59,.10);}
     <section class="view" id="view-schedule"></section>
     <section class="view" id="view-courses"></section>
     <section class="view" id="view-roster"></section>
+    <section class="view" id="view-teams"></section>
     <section class="view" id="view-points"></section>
     <section class="view" id="view-hof"></section>
     <section class="view" id="view-play"></section>
@@ -179,6 +181,7 @@ const PLAYERS_SEED=[
   {name:'Vishwajith', country:'IN', attrs:{power:81,accuracy:79,irons:80,short:79,putting:81,clutch:79}},
   {name:'Vimal', country:'IN', attrs:{power:78,accuracy:78,irons:78,short:77,putting:79,clutch:78}},
   {name:'PD', country:'IN', attrs:{power:76,accuracy:77,irons:77,short:77,putting:78,clutch:76}},
+  {name:'Atharv Heiremath', country:'IN', attrs:{power:82,accuracy:80,irons:81,short:80,putting:81,clutch:79}},
 ];
 
 /* ===== COURSES (10 best-in-world venues: 6 USA + 4 International) ===== */
@@ -193,22 +196,22 @@ const COURSES=[
   {id:'aug',name:'Augusta National Golf Club',loc:'Augusta, Georgia',country:'USA',wind:0.4,
     holes:H([[4,445],[5,575],[4,350],[3,240],[4,495],[3,180],[4,450],[5,570],[4,460],
              [4,495],[5,530,1],[3,170,1],[4,510,1],[4,440],[5,570,1],[3,180,1],[4,425],[4,465]])},
-  {id:'rmc',name:'Royal Melbourne (Composite Course)',loc:'Melbourne, Australia',country:'International',wind:0.8,
+  {id:'rmc',name:'Royal Melbourne (Composite Course)',loc:'Melbourne, Australia',country:'Australia',wind:0.8,
     holes:H([[4,410],[4,400],[3,180],[4,420],[5,510,1],[4,430],[3,155],[4,410],[4,415],
              [4,430],[3,175],[4,400],[5,505],[4,400],[3,165],[4,420],[4,410],[5,520]])},
   {id:'sho',name:'Southern Hills Country Club',loc:'Tulsa, Oklahoma',country:'USA',wind:0.5,
     holes:H([[4,455],[4,375],[3,205],[4,415],[4,380,1],[3,195],[5,600],[4,370],[4,435,1],
              [4,410],[3,255],[4,400],[5,590],[4,465,1],[4,435],[3,225],[4,375],[4,395]])},
-  {id:'sun',name:'Gary Player Country Club',loc:'Sun City, South Africa',country:'International',wind:0.6,
+  {id:'sun',name:'Gary Player Country Club',loc:'Sun City, South Africa',country:'South Africa',wind:0.6,
     holes:H([[4,420],[5,540,1],[4,435],[3,215],[4,415,1],[4,455],[3,190],[5,545],[4,430,1],
              [4,440],[4,410],[3,205],[5,555,1],[4,450],[4,420],[4,435],[3,215],[5,545,1]])},
   {id:'oak',name:'Oakmont Country Club',loc:'Oakmont, Pennsylvania',country:'USA',wind:0.3,
     holes:H([[4,485],[4,350],[4,435],[4,410],[3,185],[4,395],[4,480],[3,290],[4,475],
              [4,465],[3,300],[4,485],[5,570],[3,185],[4,450],[5,675],[4,410],[4,450]])},
-  {id:'lgn',name:'Le Golf National (Albatros Course)',loc:'Guyancourt, France',country:'International',wind:0.65,
+  {id:'lgn',name:'Le Golf National (Albatros Course)',loc:'Guyancourt, France',country:'France',wind:0.65,
     holes:H([[4,410],[4,395],[3,185,1],[5,565],[4,415],[3,175,1],[4,435],[5,555],[4,420,1],
              [4,435],[3,165],[4,410],[4,420],[5,545,1],[3,190,1],[4,420],[4,405],[4,435,1]])},
-  {id:'sta',name:'St Andrews (Old Course)',loc:'St Andrews, Scotland',country:'International',wind:0.9,
+  {id:'sta',name:'St Andrews (Old Course)',loc:'St Andrews, Scotland',country:'Scotland',wind:0.9,
     holes:H([[4,376,1],[4,453],[4,397],[4,480],[5,568],[4,412],[4,371],[3,175],[4,352],
              [4,386],[3,174],[4,348],[4,465],[5,568],[4,455],[4,423],[4,455,1],[4,357,1]])},
   {id:'pin',name:'Pinehurst No. 2',loc:'Pinehurst, North Carolina',country:'USA',wind:0.45,
@@ -221,22 +224,41 @@ function courseYardTotal(c){return c.holes.reduce((s,h)=>s+h.yards,0);}
 
 /* ===== EVENT SCHEDULE (9 stroke-play + 1 match-play finale) ===== */
 const EVENT_DEFS=[
-  {name:'Pebble Beach Pro-Classic',courseId:'peb',major:false,kind:'stroke',difficulty:1.0},
-  {name:'THE PLAYERS at Sawgrass',courseId:'saw',major:false,kind:'stroke',difficulty:1.35},
-  {name:'The Masters',courseId:'aug',major:true,kind:'stroke',difficulty:1.8},
-  {name:'Australian Open Invitational',courseId:'rmc',major:false,kind:'stroke',difficulty:1.45},
-  {name:'PGA Championship',courseId:'sho',major:true,kind:'stroke',difficulty:1.7},
-  {name:'Sun City Classic',courseId:'sun',major:false,kind:'stroke',difficulty:1.2},
-  {name:'U.S. Open',courseId:'oak',major:true,kind:'stroke',difficulty:2.6},
-  {name:'Open de France National',courseId:'lgn',major:false,kind:'stroke',difficulty:1.35},
-  {name:'The Open Championship',courseId:'sta',major:true,kind:'stroke',difficulty:2.05},
-  {name:'V TOUR Championship',courseId:'pin',major:false,kind:'final',difficulty:1.5},
+  {name:'Pebble Beach Pro-Classic',courseId:'peb',major:false,kind:'stroke',difficulty:1.0,purse:8400000},
+  {name:'THE PLAYERS at Sawgrass',courseId:'saw',major:false,kind:'stroke',difficulty:1.35,purse:25000000},
+  {name:'The Masters',courseId:'aug',major:true,kind:'stroke',difficulty:1.8,purse:18000000},
+  {name:'Australian Open Invitational',courseId:'rmc',major:false,kind:'stroke',difficulty:1.45,purse:8000000},
+  {name:'PGA Championship',courseId:'sho',major:true,kind:'stroke',difficulty:1.7,purse:17500000},
+  {name:'Sun City Team Classic',courseId:'sun',major:false,kind:'team',difficulty:1.2,purse:10000000},
+  {name:'U.S. Open',courseId:'oak',major:true,kind:'stroke',difficulty:2.6,purse:20000000},
+  {name:'Open de France National',courseId:'lgn',major:false,kind:'stroke',difficulty:1.35,purse:8000000},
+  {name:'The Open Championship',courseId:'sta',major:true,kind:'stroke',difficulty:2.05,purse:17000000},
+  {name:'V TOUR Championship',courseId:'pin',major:false,kind:'final',difficulty:1.5,purse:15000000},
 ];
-const MAJOR_POINTS=[500,300,200,150,100,75,50,25,0,0,0];
-const NORMAL_POINTS=[300,150,100,75,60,50,25,10,0,0,0];
+const MAJOR_POINTS=[200,170,145,125,105,90,75,60,45,35,25];
+const NORMAL_POINTS=[120,100,85,75,65,55,45,35,25,15,10];
+const TEAM_POINTS=NORMAL_POINTS.slice(0,6);
 function pointsForPosition(pos,isMajor){
   const idx=pos-1;const table=isMajor?MAJOR_POINTS:NORMAL_POINTS;
   return idx<table.length?table[idx]:0;
+}
+function pointsForTeamPosition(pos){const idx=pos-1;return idx<TEAM_POINTS.length?TEAM_POINTS[idx]:0;}
+/* ===== PRIZE MONEY =====
+   Percentage-of-purse payout tables. Stroke-play table covers all 11
+   individual finishing spots; the team table covers the 6 team spots in
+   the foursomes event (money is split evenly between the two partners —
+   points, by contrast, are awarded in full to each partner). The match-play
+   finale pays flat shares by bracket round instead of a position table. */
+const STROKE_PRIZE_PCT=[.18,.109,.069,.049,.041,.036,.0335,.031,.029,.027,.025];
+const TEAM_PRIZE_PCT=[.24,.18,.15,.13,.11,.09];
+const FINALE_SHARE={champion:.38,runnerUp:.20,semi:.12,quarter:.045};
+function prizeForPosition(pos,pctTable,purse){
+  const idx=pos-1;const pct=idx<pctTable.length?pctTable[idx]:0;
+  return Math.round((purse||0)*pct);
+}
+function awardPrize(pid,amount){
+  if(!amount)return;const st=STATE.standings[pid];if(!st)return;
+  st.prizeMoney=(st.prizeMoney||0)+amount;
 }
 
 /* ===== HELPERS ===== */
@@ -246,7 +268,8 @@ function uid(p){return p+'_'+Math.random().toString(36).slice(2,9)+Date.now().to
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function initialsOf(name){return name.split(' ').filter(Boolean).map(w=>w[0]).slice(0,2).join('').toUpperCase();}
 function avatarColor(name){let h=0;for(let i=0;i<name.length;i++)h=(h*31+name.charCodeAt(i))%360;return `hsl(${h},40%,32%)`;}
-function flagEmoji(code){return code==='USA'?'🇺🇸':code==='India'||code==='IN'?'🇮🇳':'🌍';}
+const FLAG_MAP={USA:'🇺🇸',India:'🇮🇳',IN:'🇮🇳',Australia:'🇦🇺','South Africa':'🇿🇦',France:'🇫🇷',Scotland:'🏴󠁧󠁢󠁳󠁣󠁴󠁿',England:'🏴󠁧󠁢󠁥󠁮󠁧󠁿','United Kingdom':'🇬🇧'};
+function flagEmoji(code){return FLAG_MAP[code]||'🌍';}
 function showToast(msg,bad){
   const wrap=document.getElementById('toast-wrap');const el=document.createElement('div');
   el.className='toast'+(bad?' bad':'');el.textContent=msg;wrap.appendChild(el);
@@ -299,8 +322,8 @@ function resolveFullSwing(hs,attrs,shotType,difficulty,windLvl,hazard){
   windLvl=windLvl||0;
   const{power,accuracy,irons}=attrs;let res={};
   if(shotType==='tee_long'){
-    const distPotential=80+power*2.85;const distActual=clamp(gaussian(distPotential,14+windLvl*2),190,365);
-    const fairwayPct=clamp(53+(accuracy-73)*1.5-difficulty*1.3-windLvl*1.6,15,90);
+    const distPotential=80+power*2.85;const distActual=clamp(gaussian(distPotential,10+windLvl*1.5),190,365);
+    const fairwayPct=clamp(53+(accuracy-73)*1.5-difficulty*0.6-windLvl*1.6,15,90);
     const accRoll=Math.random()*100;let newLie='fairway';
     if(accRoll>fairwayPct)newLie='rough';
     if(accRoll>fairwayPct+30)newLie='recovery';
@@ -314,18 +337,18 @@ function resolveFullSwing(hs,attrs,shotType,difficulty,windLvl,hazard){
   } else {
     const lieFactor=(hs.lie==='fairway'?1.0:hs.lie==='rough'?.78:hs.lie==='recovery'?.5:.6);
     const skillP=clamp(irons/99,.4,1.1);const dist=hs.remaining;
-    let girChance=(interp(GIR_ANCHORS,dist)+(skillP-.79)*girK(dist))*lieFactor-difficulty*.015-windLvl*.01;
+    let girChance=(interp(GIR_ANCHORS,dist)+(skillP-.83)*girK(dist))*lieFactor-difficulty*.008-windLvl*.01;
     girChance=clamp(girChance,.01,.98);
     if(Math.random()<girChance){
       hs.remaining=0;hs.lie='green';
-      const proxBase=interp(PROX_ANCHORS,dist)*(1-(skillP-.79)*.5)+difficulty*1.2+windLvl*1;
-      hs.puttDistanceFt=clamp(Math.round(gaussian(proxBase,proxBase*.5+1)),1,90);
+      const proxBase=interp(PROX_ANCHORS,dist)*(1-(skillP-.83)*.5)+difficulty*0.6+windLvl*1;
+      hs.puttDistanceFt=clamp(Math.round(gaussian(proxBase,proxBase*.38+1)),1,90);
       res.text=`Approach finds the green, ${hs.puttDistanceFt} ft from the pin.`;
     } else {
       const distPotential=dist*(.90+skillP*.09);
-      const distActual=clamp(gaussian(distPotential,dist*.16+windLvl*3),dist*.35,Math.min(dist*1.15,280));
+      const distActual=clamp(gaussian(distPotential,dist*.12+windLvl*2),dist*.35,Math.min(dist*1.15,280));
       const leftover=clamp(dist-distActual,dist*.03,dist*.9);
-      const qualityRoll=Math.random()*100+(irons-50)*.4-difficulty*3.2-windLvl*2;
+      const qualityRoll=Math.random()*100+(irons-50)*.4-difficulty*1.5-windLvl*2;
       let newLie;
       if(qualityRoll>62)newLie='fairway';else if(qualityRoll>32)newLie='rough';
       else if(qualityRoll>20)newLie='sand';else newLie='recovery';
@@ -342,29 +365,29 @@ function resolveFullSwing(hs,attrs,shotType,difficulty,windLvl,hazard){
 }
 function resolveChip(hs,attrs,difficulty){
   difficulty=difficulty||0;const skillP=attrs.short/99;const dist=hs.remaining;
-  const closenessBase=clamp(14-skillP*10+difficulty*2,1.5,26);const closeness=clamp(gaussian(closenessBase+dist*.04,6),.5,50);
-  const chipInChance=clamp((dist<25?(.05+skillP*.12):.01)-difficulty*.008,.002,.2);
+  const closenessBase=clamp(14-skillP*10+difficulty*0.9,1.5,26);const closeness=clamp(gaussian(closenessBase+dist*.04,4.5),.5,50);
+  const chipInChance=clamp((dist<25?(.05+skillP*.12):.01)-difficulty*.004,.002,.2);
   if(Math.random()<chipInChance){hs.holedOut=true;hs.lie='hole';return{text:'Chips it in! 🎯',holed:true};}
   hs.remaining=0;hs.lie='green';hs.puttDistanceFt=Math.round(closeness);
   return{text:`Chips on, ${hs.puttDistanceFt} ft for the putt.`};
 }
 function resolveBunker(hs,attrs,difficulty){
-  difficulty=difficulty||0;const skillP=attrs.short/99;const closeness=clamp(gaussian(16-skillP*10+difficulty*2,7),1,45);
-  if(Math.random()<clamp(.04+(1-skillP)*.05+difficulty*.015,.02,.22)){hs.remaining=clamp(hs.remaining*.4,5,60);return{text:'Leaves it in the sand — still in the bunker.'};}
+  difficulty=difficulty||0;const skillP=attrs.short/99;const closeness=clamp(gaussian(16-skillP*10+difficulty*0.9,5),1,45);
+  if(Math.random()<clamp(.04+(1-skillP)*.05+difficulty*.006,.02,.22)){hs.remaining=clamp(hs.remaining*.4,5,60);return{text:'Leaves it in the sand — still in the bunker.'};}
   hs.remaining=0;hs.lie='green';hs.puttDistanceFt=Math.round(closeness);return{text:`Splashes out to ${hs.puttDistanceFt} ft.`};
 }
 function resolvePutt(hs,attrs,difficulty,windLvl){
   difficulty=difficulty||0;windLvl=windLvl||0;
   const skillP=attrs.putting/99;const clutchP=attrs.clutch/99;const distFt=hs.puttDistanceFt;
-  let makeChance=interp(PUTT_ANCHORS,distFt)+(skillP-.79)*puttK(distFt)+(clutchP-.5)*.03-difficulty*.02-windLvl*.008;
+  let makeChance=interp(PUTT_ANCHORS,distFt)+(skillP-.83)*puttK(distFt)+(clutchP-.5)*.03-difficulty*.01-windLvl*.008;
   makeChance=clamp(makeChance,.005,.995);
   if(Math.random()<makeChance){
     hs.holedOut=true;hs.lie='hole';
     const flavor=distFt>20?'Bomb from distance — in the cup!':distFt>8?'Rolls in!':'Good putt, in the heart.';
     return{text:flavor,holed:true};
   }
-  const leaveBase=(distFt>20?distFt*.20:distFt>8?distFt*.26:distFt*.32)*(1+difficulty*.04);
-  const leave=clamp(gaussian(leaveBase,leaveBase*.4+.5),.3,distFt*.95);
+  const leaveBase=(distFt>20?distFt*.20:distFt>8?distFt*.26:distFt*.32)*(1+difficulty*.02);
+  const leave=clamp(gaussian(leaveBase,leaveBase*.3+.4),.3,distFt*.95);
   hs.puttDistanceFt=Math.round(leave*10)/10;
   return{text:`Just slides by, ${hs.puttDistanceFt} ft left.`};
 }
@@ -385,18 +408,31 @@ function simulateFullHole(holeDef,attrs,difficulty,windLvl){
   while(!hs.holedOut)playShot(hs,attrs,difficulty,windLvl,holeDef.water);
   return hs;
 }
-function effectiveAttrs(player,roundLuck){
+function effectiveAttrs(player,roundLuck,paceBonus){
   // Dynamic form: recent results vs field bump/dent attributes slightly.
   // roundLuck: a per-player, per-round "day" value (see rollRoundLuck()) that
   // shifts every attribute together — a hot putter/ball-striking day can let
   // a lower-rated player outplay a higher-rated one, exactly like real golf.
+  // paceBonus: a small settle-down correction (see roundPaceBias) applied once
+  // a round is running well over pace, so a string of bad holes eases up
+  // instead of snowballing into an unrealistic score.
   const form=playerFormScore(player.id);
   const luck=typeof roundLuck==='number'?roundLuck:0;
+  const pace=typeof paceBonus==='number'?paceBonus:0;
   const out={};ATTRS.forEach(a=>{
-    let v=player.attrs[a.key]+form*2.5+luck*5.5;
+    let v=player.attrs[a.key]+form*2.5+luck*5.5+pace;
     out[a.key]=clamp(Math.round(v),1,99);
   });
   return out;
+}
+function roundPaceBias(ev,rnd,pid,holesSoFar){
+  const course=getCourse(ev.courseId);const scores=rnd.scores[pid];
+  let toPar=0,played=0;
+  for(let i=0;i<holesSoFar;i++){if(scores[i]!=null){toPar+=scores[i]-course.holes[i].par;played++;}}
+  if(played<4)return 0;
+  const pace=toPar/played;
+  if(pace<=0.3)return 0;
+  return clamp((pace-0.3)*14,0,12);
 }
 function rollRoundLuck(){return clamp(gaussian(0,1),-2.3,2.3);}
 const FORM_WINDOW=4;
@@ -416,17 +452,26 @@ function formLabel(score){
 }
 
 /* ===== STATE / STORAGE ===== */
-const STORAGE_KEY='vtour_save_v1';
+const STORAGE_KEY='vtour_save_v2';
 let STATE=null;
+function buildDefaultTeams(players){
+  const teams=[];
+  for(let i=0;i<players.length;i+=2){
+    teams.push({id:uid('team'),playerIds:[players[i]?players[i].id:null,players[i+1]?players[i+1].id:null]});
+  }
+  return teams;
+}
 function freshState(){
   const players=PLAYERS_SEED.map(p=>({id:uid('p'),name:p.name,country:p.country,attrs:{...p.attrs}}));
-  const standings={};players.forEach(p=>standings[p.id]={points:0,history:[]});
+  const standings={};players.forEach(p=>standings[p.id]={points:0,prizeMoney:0,history:[]});
   return{
     tourNumber:1,
     players,
     standings,
+    teams:buildDefaultTeams(players),
+    teamsFinalized:false,
     events:EVENT_DEFS.map((d,i)=>({
-      id:'ev_'+i,idx:i,name:d.name,courseId:d.courseId,major:d.major,kind:d.kind,difficulty:d.difficulty,
+      id:'ev_'+i,idx:i,name:d.name,courseId:d.courseId,major:d.major,kind:d.kind,difficulty:d.difficulty,purse:d.purse,
       status:i===0?'current':'upcoming',rounds:[],results:null,bracket:null,
     })),
     tourChampionId:null,championGolferId:null,
@@ -438,9 +483,121 @@ function loadState(){
   try{const raw=localStorage.getItem(STORAGE_KEY);if(raw)return JSON.parse(raw);}catch(e){}
   return null;
 }
+/* ===== MIGRATION =====
+   Brings an older saved STATE up to the current shape so new features
+   (Atharv Heiremath, team pairings, prize money, real course countries)
+   don't crash a save made before they existed. Safe to run on a fully
+   current save too — every step is a no-op if the field already matches. */
+function migrateState(state){
+  if(!state)return state;
+  // 1) Roster: add any seed players missing from an older save (e.g. Atharv).
+  state.players=state.players||[];
+  PLAYERS_SEED.forEach(seed=>{
+    if(!state.players.some(p=>p.name===seed.name)){
+      state.players.push({id:uid('p'),name:seed.name,country:seed.country,attrs:{...seed.attrs}});
+    }
+  });
+  // 2) Standings: ensure every current player has a standings row, and that
+  //    older rows have the newer prizeMoney field (and history entries have prize).
+  state.standings=state.standings||{};
+  state.players.forEach(p=>{
+    if(!state.standings[p.id])state.standings[p.id]={points:0,prizeMoney:0,history:[]};
+    const st=state.standings[p.id];
+    if(typeof st.points!=='number')st.points=0;
+    if(typeof st.prizeMoney!=='number')st.prizeMoney=0;
+    if(!Array.isArray(st.history))st.history=[];
+    st.history.forEach(h=>{if(typeof h.prize!=='number')h.prize=0;});
+  });
+  // 3) Events: reconcile against the current EVENT_DEFS (purse amounts, and
+  //    the Sun City Classic's stroke->team conversion) without touching
+  //    events that are already complete or mid-play with incompatible data.
+  if(!Array.isArray(state.events)||state.events.length!==EVENT_DEFS.length){
+    state.events=EVENT_DEFS.map((d,i)=>({
+      id:'ev_'+i,idx:i,name:d.name,courseId:d.courseId,major:d.major,kind:d.kind,difficulty:d.difficulty,purse:d.purse,
+      status:i===0?'current':'upcoming',rounds:[],results:null,bracket:null,
+    }));
+  }else{
+    state.events.forEach((ev,i)=>{
+      const d=EVENT_DEFS[i];
+      if(typeof ev.purse!=='number')ev.purse=d.purse;
+      if(ev.name==null)ev.name=d.name;
+      if(ev.kind!==d.kind){
+        if(ev.status==='complete'){
+          // Historical event stays as it was played; only relabel it so any
+          // forward-looking logic (badges, filters) treats it consistently.
+          ev.kind=d.kind;
+        }else{
+          // Not yet complete (or only just started under the old rules) —
+          // safe to convert fully to the new kind with a clean slate.
+          ev.kind=d.kind;ev.status=ev.status==='current'?'current':'upcoming';
+          ev.rounds=[];ev.results=null;ev.playoff=null;ev.winnerId=null;
+        }
+      }
+    });
+  }
+  // 4) Teams: build if missing, and repair if the roster has grown (new
+  //    player added mid-Tour) or a team references a player id that no
+  //    longer exists.
+  const validIds=new Set(state.players.map(p=>p.id));
+  const teamsBroken=!Array.isArray(state.teams)||state.teams.length===0||
+    state.teams.some(t=>!t.playerIds||t.playerIds.some(pid=>pid&&!validIds.has(pid)));
+  if(teamsBroken){
+    state.teams=buildDefaultTeams(state.players);
+    state.teamsFinalized=false;
+  }
+  if(typeof state.teamsFinalized!=='boolean')state.teamsFinalized=false;
+  // 5) Backfill missing per-player / per-team score arrays on any event
+  //    that's already mid-play, so a newly added player/team doesn't
+  //    break roundComplete()/leaderboard loops.
+  state.events.forEach(ev=>{
+    if(!ev.rounds||ev.rounds.length!==4)return;
+    if(ev.kind==='team'){
+      state.teams.forEach(t=>{
+        ev.rounds.forEach(rnd=>{
+          rnd.scores=rnd.scores||{};rnd.luck=rnd.luck||{};
+          if(!rnd.scores[t.id]){rnd.scores[t.id]=new Array(18).fill(null);rnd.luck[t.id]=rollRoundLuck();}
+        });
+      });
+    }else if(ev.kind==='stroke'||ev.kind==='final'){
+      state.players.forEach(p=>{
+        ev.rounds.forEach(rnd=>{
+          rnd.scores=rnd.scores||{};rnd.luck=rnd.luck||{};
+          if(!rnd.scores[p.id]){rnd.scores[p.id]=new Array(18).fill(null);rnd.luck[p.id]=rollRoundLuck();}
+        });
+      });
+    }
+  });
+  // 6) Misc top-level fields that might be missing on very old saves.
+  if(typeof state.tourNumber!=='number')state.tourNumber=1;
+  if(!state.hallOfFame)state.hallOfFame={majors:[],tourChamps:[],champions:[]};
+  if(!Array.isArray(state.hallOfFame.majors))state.hallOfFame.majors=[];
+  if(!Array.isArray(state.hallOfFame.tourChampions))state.hallOfFame.tourChampions=[];
+  if(!Array.isArray(state.hallOfFame.champions))state.hallOfFame.champions=[];
+  if(state.tourChampionId===undefined)state.tourChampionId=null;
+  if(state.championGolferId===undefined)state.championGolferId=null;
+  return state;
+}
+
 function getPlayer(id){return STATE.players.find(p=>p.id===id);}
 function getEvent(idx){return STATE.events[idx];}
 function currentEventIdx(){const i=STATE.events.findIndex(e=>e.status==='current');return i===-1?STATE.events.findIndex(e=>e.status==='upcoming'):i;}
+
+/* ===== TEAMS (Sun City Team Classic · foursomes) ===== */
+function getTeam(id){return STATE.teams.find(t=>t.id===id);}
+function teamLabel(team){if(!team)return'';return team.playerIds.map(pid=>{const p=getPlayer(pid);return p?p.name.split(' ')[0]:'—';}).join(' & ');}
+function teamEventIdx(){return STATE.events.findIndex(e=>e.kind==='team');}
+function teamEvent(){const i=teamEventIdx();return i===-1?null:STATE.events[i];}
+function teamEventStarted(){
+  const ev=teamEvent();if(!ev||!ev.rounds||!ev.rounds.length)return false;
+  return ev.rounds.some(r=>r.scores&&Object.values(r.scores).some(arr=>arr&&arr.some(v=>v!=null)));
+}
+function teamsValidationError(){
+  const all=STATE.teams.flatMap(t=>t.playerIds);
+  if(all.some(id=>!id))return'Every team needs two players assigned.';
+  if(new Set(all).size!==all.length)return'Each player can only be on one team.';
+  return null;
+}
+function shuffledPlayers(){const arr=STATE.players.slice();for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
 
 /* ===== STROKE-PLAY LIFECYCLE ===== */
 function ensureRounds(ev){
@@ -460,7 +617,8 @@ function simulateHoleAllPlayers(ev,ri,hi){
   const course=getCourse(ev.courseId);const holeDef=course.holes[hi];const rnd=ev.rounds[ri];
   STATE.players.forEach(p=>{
     if(rnd.scores[p.id][hi]!=null)return;
-    const hs=simulateFullHole(holeDef,effectiveAttrs(p,rnd.luck&&rnd.luck[p.id]),ev.difficulty,rnd.windLevel);
+    const bias=roundPaceBias(ev,rnd,p.id,hi);
+    const hs=simulateFullHole(holeDef,effectiveAttrs(p,rnd.luck&&rnd.luck[p.id],bias),ev.difficulty,rnd.windLevel);
     rnd.scores[p.id][hi]=hs.strokes;
   });
 }
@@ -470,7 +628,8 @@ function simulateRestOfRound(ev,ri,skipPid){
     STATE.players.forEach(p=>{
       if(skipPid&&p.id===skipPid)return;
       if(rnd.scores[p.id][hi]!=null)return;
-      const hs=simulateFullHole(holeDef,effectiveAttrs(p,rnd.luck&&rnd.luck[p.id]),ev.difficulty,rnd.windLevel);
+      const bias=roundPaceBias(ev,rnd,p.id,hi);
+      const hs=simulateFullHole(holeDef,effectiveAttrs(p,rnd.luck&&rnd.luck[p.id],bias),ev.difficulty,rnd.windLevel);
       rnd.scores[p.id][hi]=hs.strokes;
     });
   }
@@ -483,7 +642,48 @@ function simulateEntireEvent(ev){
 function totalStrokesThrough(ev,pid,uptoRound){
   let s=0;for(let ri=0;ri<=uptoRound;ri++)s+=playerRoundTotal(ev,ri,pid);return s;
 }
+function capRoundRealism(ev,ri){
+  // Same safety net as capEventRealism, but applied cumulatively as soon as
+  // each round finishes (not just once the whole event is finalized), so the
+  // leaderboard never shows a blown-out score mid-tournament. Allows a little
+  // more slack in earlier rounds (a rough front nine can still happen) but
+  // converges exactly on the event's final cap by the time round 4 wraps.
+  const course=getCourse(ev.courseId);
+  const finalCap=Math.round(6+ev.difficulty*1.2);
+  const roundsPlayed=ri+1;
+  const cap=roundsPlayed>=4?finalCap:Math.round(finalCap*roundsPlayed/4)+2;
+  STATE.players.forEach(p=>{
+    const holes=[];let total=0;
+    for(let r=0;r<=ri;r++){
+      const rnd=ev.rounds[r];
+      for(let hi=0;hi<18;hi++){
+        const par=course.holes[hi].par;
+        total+=rnd.scores[p.id][hi]-par;
+        holes.push({r,hi,par});
+      }
+    }
+    if(total<=cap)return;
+    let excess=total-cap,guard=0;
+    while(excess>0&&guard<400){
+      guard++;
+      let worstIdx=-1,worstDiff=-Infinity;
+      holes.forEach((h,idx)=>{
+        const diff=ev.rounds[h.r].scores[p.id][h.hi]-h.par;
+        if(diff>worstDiff){worstDiff=diff;worstIdx=idx;}
+      });
+      if(worstDiff<=-2)break;
+      const h=holes[worstIdx];
+      ev.rounds[h.r].scores[p.id][h.hi]-=1;
+      excess--;
+    }
+  });
+  ev.rounds[ri].__capped=true;
+}
 function computeLeaderboard(ev){
+  if(ev.status==='complete'&&ev.results)return ev.results;
+  for(let ri=0;ri<4;ri++){
+    if(ev.rounds&&ev.rounds[ri]&&!ev.rounds[ri].__capped&&roundComplete(ev,ri))capRoundRealism(ev,ri);
+  }
   const par=courseParTotal(getCourse(ev.courseId));
   const lastPlayedRound=ev.rounds.reduce((acc,r,ri)=>STATE.players.some(p=>playerThru(ev,ri,p.id)>0)?ri:acc,0);
   const rows=STATE.players.map(p=>{
@@ -498,15 +698,86 @@ function computeLeaderboard(ev){
   let pos=1;rows.forEach((r,i)=>{if(i>0&&r.toPar===rows[i-1].toPar)r.pos=rows[i-1].pos;else r.pos=pos;pos=i+2;});
   return rows;
 }
+function resolveLeadPlayoff(ev,rows){
+  const leaders=rows.filter(r=>r.pos===1);
+  if(leaders.length<2)return{rows,playoff:null};
+  const course=getCourse(ev.courseId);
+  const diff=ev.difficulty;
+  const wl=windLevelForCourse(course);
+  let contenders=leaders.map(r=>r.pid);
+  const holesLog=[];
+  let holeIdx=0,winnerId=null,guard=0;
+  while(!winnerId&&guard<50){
+    guard++;
+    const holeDef=course.holes[holeIdx%18];
+    const shots=contenders.map(pid=>{
+      const p=getPlayer(pid);
+      const hs=simulateFullHole(holeDef,effectiveAttrs(p,0),diff,wl);
+      return{pid,name:getPlayer(pid).name,strokes:hs.strokes};
+    });
+    const minStrokes=Math.min(...shots.map(s=>s.strokes));
+    const survivors=shots.filter(s=>s.strokes===minStrokes).map(s=>s.pid);
+    holesLog.push({hole:holeIdx%18+1,par:holeDef.par,shots});
+    if(survivors.length===1)winnerId=survivors[0];
+    else{contenders=survivors;holeIdx++;}
+  }
+  if(!winnerId)winnerId=contenders[0];
+  const winnerRow=rows.find(r=>r.pid===winnerId);
+  const others=rows.filter(r=>r.pid!==winnerId);
+  winnerRow.pos=1;
+  let pos=2;
+  others.forEach((r,i)=>{
+    if(i>0&&r.toPar===others[i-1].toPar)r.pos=others[i-1].pos;
+    else r.pos=pos;
+    pos=i+3;
+  });
+  return{rows:[winnerRow,...others],playoff:{holes:holesLog,winnerId,leaderIds:leaders.map(r=>r.pid)}};
+}
+function capEventRealism(ev){
+  // Safety net: guarantees no player can ever card a total blowout score.
+  // Trims strokes off a player's worst holes (never better than eagle) until
+  // their 72-hole total is back under a realistic ceiling for this event's
+  // difficulty. With the tuned probabilities above this rarely triggers —
+  // it only catches the true unlucky-outlier rounds.
+  const course=getCourse(ev.courseId);
+  const maxTotal=Math.round(6+ev.difficulty*1.2);
+  STATE.players.forEach(p=>{
+    const holes=[];let total=0;
+    for(let ri=0;ri<4;ri++)for(let hi=0;hi<18;hi++){
+      const par=course.holes[hi].par;
+      total+=ev.rounds[ri].scores[p.id][hi]-par;
+      holes.push({ri,hi,par});
+    }
+    if(total<=maxTotal)return;
+    let excess=total-maxTotal,guard=0;
+    while(excess>0&&guard<2000){
+      guard++;
+      let worstIdx=-1,worstDiff=-Infinity;
+      holes.forEach((h,idx)=>{
+        const diff=ev.rounds[h.ri].scores[p.id][h.hi]-h.par;
+        if(diff>worstDiff){worstDiff=diff;worstIdx=idx;}
+      });
+      if(worstDiff<=-2)break;
+      const h=holes[worstIdx];
+      ev.rounds[h.ri].scores[p.id][h.hi]-=1;
+      excess--;
+    }
+  });
+}
 function finishEventIfDone(ev){
   if(!ev.rounds.every((r,ri)=>roundComplete(ev,ri)))return false;
-  const lb=computeLeaderboard(ev);
+  capEventRealism(ev);
+  let lb=computeLeaderboard(ev);
+  const{rows,playoff}=resolveLeadPlayoff(ev,lb);
+  lb=rows;ev.playoff=playoff;
   ev.results=lb;ev.status='complete';ev.winnerId=lb[0].pid;
   lb.forEach(r=>{
     const st=STATE.standings[r.pid];
     const pts=pointsForPosition(r.pos,ev.major);
+    const prize=prizeForPosition(r.pos,STROKE_PRIZE_PCT,ev.purse);
     st.points+=pts;
-    st.history.push({eventIdx:ev.idx,eventName:ev.name,pos:r.pos,points:pts,toPar:r.toPar,toParVsField:r.toPar-avgFieldToPar(lb)});
+    awardPrize(r.pid,prize);
+    st.history.push({eventIdx:ev.idx,eventName:ev.name,pos:r.pos,points:pts,prize,toPar:r.toPar,toParVsField:r.toPar-avgFieldToPar(lb)});
   });
   if(ev.major){
     STATE.hallOfFame.majors.push({tour:STATE.tourNumber,event:ev.name,course:getCourse(ev.courseId).name,winnerId:lb[0].pid,winnerName:getPlayer(lb[0].pid).name,toPar:lb[0].toPar});
@@ -526,6 +797,179 @@ function finishEventIfDone(ev){
   return true;
 }
 function avgFieldToPar(lb){const s=lb.reduce((a,r)=>a+r.toPar,0);return s/lb.length;}
+
+/* ===== TEAM (FOURSOMES) LIFECYCLE — Sun City Team Classic =====
+   Same 4-round stroke-play skeleton as the individual events above, but the
+   6 competitors are 2-man teams (STATE.teams) instead of the 11/12 individual
+   players, and every hole is played alternate-shot: partners take turns
+   hitting the *same ball*, swapping after every stroke, with whoever tees
+   off alternating by hole. Reuses nextOpenHole/playerRoundTotal/playerThru/
+   roundPaceBias unchanged since those already key off a generic competitor id. */
+function ensureTeamRounds(ev){
+  if(ev.rounds&&ev.rounds.length===4)return;
+  const course=getCourse(ev.courseId);
+  ev.rounds=[0,1,2,3].map(()=>{
+    const scores={};const luck={};STATE.teams.forEach(t=>{scores[t.id]=new Array(18).fill(null);luck[t.id]=rollRoundLuck();});
+    return{windLevel:windLevelForCourse(course),windDir:windDirDeg(),scores,luck};
+  });
+}
+function teamRoundComplete(ev,ri){return STATE.teams.every(t=>ev.rounds[ri].scores[t.id].every(v=>v!=null));}
+function simulateFullHoleTeam(holeDef,pA,pB,difficulty,windLvl,leadIsA,luck,pace){
+  const hs=newHoleState(holeDef);let turnIsA=leadIsA;
+  while(!hs.holedOut){
+    playShot(hs,effectiveAttrs(turnIsA?pA:pB,luck,pace),difficulty,windLvl,holeDef.water);
+    turnIsA=!turnIsA;
+  }
+  return hs;
+}
+function simulateRestOfTeamRound(ev,ri,skipTeamId){
+  for(let hi=0;hi<18;hi++){
+    const course=getCourse(ev.courseId);const holeDef=course.holes[hi];const rnd=ev.rounds[ri];
+    STATE.teams.forEach(t=>{
+      if(skipTeamId&&t.id===skipTeamId)return;
+      if(rnd.scores[t.id][hi]!=null)return;
+      const pA=getPlayer(t.playerIds[0]),pB=getPlayer(t.playerIds[1]);
+      const bias=roundPaceBias(ev,rnd,t.id,hi);
+      const hs=simulateFullHoleTeam(holeDef,pA,pB,ev.difficulty,rnd.windLevel,hi%2===0,rnd.luck&&rnd.luck[t.id],bias);
+      rnd.scores[t.id][hi]=hs.strokes;
+    });
+  }
+}
+function simulateEntireTeamEvent(ev){
+  ensureTeamRounds(ev);
+  for(let ri=0;ri<4;ri++)simulateRestOfTeamRound(ev,ri,null);
+  finishTeamEventIfDone(ev);
+}
+function capTeamRoundRealism(ev,ri){
+  const course=getCourse(ev.courseId);
+  const finalCap=Math.round(6+ev.difficulty*1.2);
+  const roundsPlayed=ri+1;
+  const cap=roundsPlayed>=4?finalCap:Math.round(finalCap*roundsPlayed/4)+2;
+  STATE.teams.forEach(t=>{
+    const holes=[];let total=0;
+    for(let r=0;r<=ri;r++){
+      const rnd=ev.rounds[r];
+      for(let hi=0;hi<18;hi++){
+        const par=course.holes[hi].par;
+        total+=rnd.scores[t.id][hi]-par;
+        holes.push({r,hi,par});
+      }
+    }
+    if(total<=cap)return;
+    let excess=total-cap,guard=0;
+    while(excess>0&&guard<400){
+      guard++;
+      let worstIdx=-1,worstDiff=-Infinity;
+      holes.forEach((h,idx)=>{
+        const diff=ev.rounds[h.r].scores[t.id][h.hi]-h.par;
+        if(diff>worstDiff){worstDiff=diff;worstIdx=idx;}
+      });
+      if(worstDiff<=-2)break;
+      const h=holes[worstIdx];
+      ev.rounds[h.r].scores[t.id][h.hi]-=1;
+      excess--;
+    }
+  });
+  ev.rounds[ri].__capped=true;
+}
+function computeTeamLeaderboard(ev){
+  if(ev.status==='complete'&&ev.results)return ev.results;
+  for(let ri=0;ri<4;ri++){
+    if(ev.rounds&&ev.rounds[ri]&&!ev.rounds[ri].__capped&&teamRoundComplete(ev,ri))capTeamRoundRealism(ev,ri);
+  }
+  const par=courseParTotal(getCourse(ev.courseId));
+  const lastPlayedRound=ev.rounds.reduce((acc,r,ri)=>STATE.teams.some(t=>playerThru(ev,ri,t.id)>0)?ri:acc,0);
+  const rows=STATE.teams.map(t=>{
+    let total=0,thru=0,roundsPlayed=0;
+    for(let ri=0;ri<4;ri++){
+      const th=playerThru(ev,ri,t.id);
+      if(th>0){total+=playerRoundTotal(ev,ri,t.id);roundsPlayed++;if(ri===lastPlayedRound)thru=th;}
+    }
+    return{pid:t.id,name:teamLabel(t),total,toPar:total-par*roundsPlayed,roundsPlayed,thru:roundsPlayed<4?thru:18};
+  });
+  rows.sort((a,b)=>a.toPar-b.toPar);
+  let pos=1;rows.forEach((r,i)=>{if(i>0&&r.toPar===rows[i-1].toPar)r.pos=rows[i-1].pos;else r.pos=pos;pos=i+2;});
+  return rows;
+}
+function resolveTeamPlayoff(ev,rows){
+  const leaders=rows.filter(r=>r.pos===1);
+  if(leaders.length<2)return{rows,playoff:null};
+  const course=getCourse(ev.courseId);const diff=ev.difficulty;const wl=windLevelForCourse(course);
+  let contenders=leaders.map(r=>r.pid);
+  const holesLog=[];let holeIdx=0,winnerId=null,guard=0;
+  while(!winnerId&&guard<50){
+    guard++;
+    const holeDef=course.holes[holeIdx%18];
+    const shots=contenders.map(tid=>{
+      const t=getTeam(tid);const pA=getPlayer(t.playerIds[0]),pB=getPlayer(t.playerIds[1]);
+      const hs=simulateFullHoleTeam(holeDef,pA,pB,diff,wl,holeIdx%2===0,0,0);
+      return{pid:tid,name:teamLabel(t),strokes:hs.strokes};
+    });
+    const minStrokes=Math.min(...shots.map(s=>s.strokes));
+    const survivors=shots.filter(s=>s.strokes===minStrokes).map(s=>s.pid);
+    holesLog.push({hole:holeIdx%18+1,par:holeDef.par,shots});
+    if(survivors.length===1)winnerId=survivors[0];
+    else{contenders=survivors;holeIdx++;}
+  }
+  if(!winnerId)winnerId=contenders[0];
+  const winnerRow=rows.find(r=>r.pid===winnerId);const others=rows.filter(r=>r.pid!==winnerId);
+  winnerRow.pos=1;let pos=2;
+  others.forEach((r,i)=>{if(i>0&&r.toPar===others[i-1].toPar)r.pos=others[i-1].pos;else r.pos=pos;pos=i+3;});
+  return{rows:[winnerRow,...others],playoff:{holes:holesLog,winnerId,leaderIds:leaders.map(r=>r.pid)}};
+}
+function capTeamEventRealism(ev){
+  const course=getCourse(ev.courseId);
+  const maxTotal=Math.round(6+ev.difficulty*1.2);
+  STATE.teams.forEach(t=>{
+    const holes=[];let total=0;
+    for(let ri=0;ri<4;ri++)for(let hi=0;hi<18;hi++){
+      const par=course.holes[hi].par;
+      total+=ev.rounds[ri].scores[t.id][hi]-par;
+      holes.push({ri,hi,par});
+    }
+    if(total<=maxTotal)return;
+    let excess=total-maxTotal,guard=0;
+    while(excess>0&&guard<2000){
+      guard++;
+      let worstIdx=-1,worstDiff=-Infinity;
+      holes.forEach((h,idx)=>{
+        const diff=ev.rounds[h.ri].scores[t.id][h.hi]-h.par;
+        if(diff>worstDiff){worstDiff=diff;worstIdx=idx;}
+      });
+      if(worstDiff<=-2)break;
+      const h=holes[worstIdx];
+      ev.rounds[h.ri].scores[t.id][h.hi]-=1;
+      excess--;
+    }
+  });
+}
+function finishTeamEventIfDone(ev){
+  if(!ev.rounds.every((r,ri)=>teamRoundComplete(ev,ri)))return false;
+  capTeamEventRealism(ev);
+  let lb=computeTeamLeaderboard(ev);
+  const{rows,playoff}=resolveTeamPlayoff(ev,lb);
+  lb=rows;ev.playoff=playoff;
+  ev.results=lb;ev.status='complete';ev.winnerId=lb[0].pid;
+  lb.forEach(r=>{
+    const team=getTeam(r.pid);
+    const pts=pointsForTeamPosition(r.pos);
+    const teamPrize=prizeForPosition(r.pos,TEAM_PRIZE_PCT,ev.purse);
+    const perPlayerPrize=Math.round(teamPrize/2);
+    team.playerIds.forEach(pid=>{
+      const st=STATE.standings[pid];
+      st.points+=pts;
+      awardPrize(pid,perPlayerPrize);
+      st.history.push({eventIdx:ev.idx,eventName:ev.name,pos:r.pos,points:pts,prize:perPlayerPrize,toPar:r.toPar,toParVsField:r.toPar-avgFieldToPar(lb),team:true,teammateId:team.playerIds.find(x=>x!==pid)});
+    });
+  });
+  const nextIdx=ev.idx+1;
+  if(nextIdx<STATE.events.length){
+    STATE.events[nextIdx].status='current';
+    if(nextIdx===9)buildFinaleBracket();
+  }
+  saveState();
+  return true;
+}
 
 /* ===== MATCH-PLAY FINALE (Event 10 · V TOUR Championship) ===== */
 function buildFinaleBracket(){
@@ -605,6 +1049,21 @@ function finaleAdvanceIfNeeded(){
     ev.status='complete';ev.winnerId=m.winnerId;
     STATE.championGolferId=m.winnerId;
     STATE.hallOfFame.champions.push({tour:STATE.tourNumber,championId:m.winnerId,championName:getPlayer(m.winnerId).name,runnerUpId:br.runnerUp,runnerUpName:getPlayer(br.runnerUp).name});
+    if(!ev.prizesAwarded){
+      const purse=ev.purse||0;
+      br.rounds.forEach(r=>{
+        r.matches.forEach(mm=>{
+          const loserId=mm.winnerId===mm.pidA?mm.pidB:mm.pidA;
+          if(r.name==='Quarterfinals')awardPrize(loserId,Math.round(purse*FINALE_SHARE.quarter));
+          else if(r.name==='Semifinals')awardPrize(loserId,Math.round(purse*FINALE_SHARE.semi));
+          else if(r.name.indexOf('Final')===0){
+            awardPrize(mm.winnerId,Math.round(purse*FINALE_SHARE.champion));
+            awardPrize(loserId,Math.round(purse*FINALE_SHARE.runnerUp));
+          }
+        });
+      });
+      ev.prizesAwarded=true;
+    }
   }
   saveState();
 }
@@ -685,9 +1144,15 @@ function setPlayHoleState(pid,state){
   if(state)PLAY.holeStates[pid]=state;
   else delete PLAY.holeStates[pid];
 }
+const PLAY_TEAM={focusTeamId:null,hs:null,holeIdx:0,holeStates:{}};
+function setTeamPlayHoleState(tid,state){
+  PLAY_TEAM.hs=state;
+  if(state)PLAY_TEAM.holeStates[tid]=state;
+  else delete PLAY_TEAM.holeStates[tid];
+}
 
 /* ===== RENDERING ===== */
-const VIEWS=['dashboard','schedule','courses','roster','points','hof','play'];
+const VIEWS=['dashboard','schedule','courses','roster','teams','points','hof','play'];
 function switchView(v){
   VIEWS.forEach(id=>document.getElementById('view-'+id).classList.toggle('active',id===v));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));
@@ -698,6 +1163,7 @@ function renderView(v){
   else if(v==='schedule')renderSchedule();
   else if(v==='courses')renderCourses();
   else if(v==='roster')renderRoster();
+  else if(v==='teams')renderTeams();
   else if(v==='points')renderPoints();
   else if(v==='hof')renderHOF();
   else if(v==='play')renderPlay();
@@ -720,10 +1186,12 @@ function refreshTopbar(){
 function renderDashboard(){
   const el=document.getElementById('view-dashboard');
   const ranked=STATE.players.slice().sort((a,b)=>STATE.standings[b.id].points-STATE.standings[a.id].points);
+  const moneyRanked=STATE.players.slice().sort((a,b)=>(STATE.standings[b.id].prizeMoney||0)-(STATE.standings[a.id].prizeMoney||0));
+  const moneyLeader=(moneyRanked[0]&&STATE.standings[moneyRanked[0].id].prizeMoney>0)?moneyRanked[0]:null;
   const ci=currentEventIdx();
   const curEv=ci!==-1?STATE.events[ci]:null;
   el.innerHTML=`<div class="section-head"><div><span class="eyebrow">V Tour · Tour ${STATE.tourNumber}</span><h2>Dashboard</h2></div></div>
-  <div class="grid cols-3" style="margin-bottom:16px;">
+  <div class="grid cols-4" style="margin-bottom:16px;">
     <div class="card" style="padding:18px;border-left:4px solid var(--board-amber);">
       <div class="eyebrow">Tour Champion</div>
       <h3 style="font-size:20px;margin-top:4px;">${STATE.tourChampionId?'👑 '+escapeHTML(getPlayer(STATE.tourChampionId).name):'Decided after Event 9'}</h3>
@@ -734,11 +1202,16 @@ function renderDashboard(){
       <h3 style="font-size:20px;margin-top:4px;">${STATE.championGolferId?'🏆 '+escapeHTML(getPlayer(STATE.championGolferId).name):'Decided at the V TOUR Championship'}</h3>
       <p style="font-size:12px;color:var(--ink-500);margin-top:6px;">Winner of the 36-hole match-play final among the top 8 seeds.</p>
     </div>
+    <div class="card" style="padding:18px;border-left:4px solid var(--water-blue);">
+      <div class="eyebrow">Money Leader</div>
+      <h3 style="font-size:20px;margin-top:4px;">${moneyLeader?'💰 '+escapeHTML(moneyLeader.name):'No prize money yet'}</h3>
+      <p style="font-size:12px;color:var(--ink-500);margin-top:6px;">${moneyLeader?'$'+STATE.standings[moneyLeader.id].prizeMoney.toLocaleString()+' in earnings this Tour':'Earnings begin once Event 1 wraps up.'}</p>
+    </div>
     <div class="card" style="padding:18px;border-left:4px solid var(--turf-600);">
       <div class="eyebrow">${curEv?(curEv.status==='current'?'Now Playing':'Up Next'):'Tour Complete'}</div>
       <h3 style="font-size:20px;margin-top:4px;">${curEv?escapeHTML(curEv.name):'All 10 events finished'}</h3>
-      <p style="font-size:12px;color:var(--ink-500);margin-top:6px;">${curEv?escapeHTML(getCourse(curEv.courseId).name)+' · '+getCourse(curEv.courseId).loc:'Start a new tour to play again.'}</p>
-      ${curEv?`<button class="btn amber btn-sm" style="margin-top:10px;" id="dash-go-play">Go to This Event</button>`:''}
+      <p style="font-size:12px;color:var(--ink-500);margin-top:6px;">${curEv?escapeHTML(getCourse(curEv.courseId).name)+' · '+getCourse(curEv.courseId).loc:'Start a new season to play again.'}</p>
+      ${curEv?`<button class="btn amber btn-sm" style="margin-top:10px;" id="dash-go-play">Go to This Event</button>`:`<button class="btn amber btn-sm" style="margin-top:10px;" id="dash-new-season">🏁 Start New Season</button>`}
     </div>
   </div>
   <div class="grid cols-2">
@@ -754,12 +1227,13 @@ function renderDashboard(){
     <div class="card" style="padding:18px;">
       <div class="eyebrow" style="margin-bottom:8px;">Schedule Progress</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;">
-        ${STATE.events.map(e=>`<span class="badge status-${e.status}" title="${escapeHTML(e.name)}">${e.idx+1}${e.major?' ★':''}${e.kind==='final'?' 🏁':''}</span>`).join('')}
+        ${STATE.events.map(e=>`<span class="badge status-${e.status}" title="${escapeHTML(e.name)}">${e.idx+1}${e.major?' ★':''}${e.kind==='final'?' 🏁':''}${e.kind==='team'?' 👥':''}</span>`).join('')}
       </div>
       <p style="font-size:11px;color:var(--ink-500);margin-top:10px;">★ = Major championship (4 rounds stroke play) · 🏁 = V TOUR Championship (match play finale)</p>
     </div>
   </div>`;
   document.getElementById('dash-go-play')?.addEventListener('click',()=>switchView('play'));
+  document.getElementById('dash-new-season')?.addEventListener('click',openResetModal);
 }
 
 /* ---- Schedule ---- */
@@ -769,7 +1243,9 @@ function renderSchedule(){
   <div style="display:flex;flex-direction:column;gap:10px;">
   ${STATE.events.map(ev=>{
     const course=getCourse(ev.courseId);
-    const winner=ev.kind==='stroke'?(ev.winnerId?getPlayer(ev.winnerId):null):(ev.bracket&&ev.bracket.champion?getPlayer(ev.bracket.champion):null);
+    const winner=ev.kind==='stroke'?(ev.winnerId?getPlayer(ev.winnerId):null):
+      ev.kind==='team'?(ev.winnerId?{name:teamLabel(getTeam(ev.winnerId))}:null):
+      (ev.bracket&&ev.bracket.champion?getPlayer(ev.bracket.champion):null);
     return `<div class="card" style="padding:16px 18px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
       <div class="num" style="font-size:26px;color:var(--ink-500);width:34px;">${ev.idx+1}</div>
       <div style="flex:1;min-width:220px;">
@@ -777,9 +1253,10 @@ function renderSchedule(){
           <h3 style="font-size:16px;">${escapeHTML(ev.name)}</h3>
           ${ev.major?'<span class="badge major">Major</span>':''}
           ${ev.kind==='final'?'<span class="badge major" style="background:rgba(168,54,42,.15);color:var(--flag-red);border-color:rgba(168,54,42,.4);">Match Play Finale</span>':''}
+          ${ev.kind==='team'?'<span class="badge" style="background:rgba(61,126,166,.15);color:var(--water-blue);border:1px solid rgba(61,126,166,.4);">Team Foursomes</span>':''}
           <span class="badge status-${ev.status}">${ev.status}</span>
         </div>
-        <div style="font-size:12.5px;color:var(--ink-500);margin-top:3px;">${flagEmoji(course.country==='USA'?'USA':'IN')} ${escapeHTML(course.name)} · ${escapeHTML(course.loc)} · Par ${courseParTotal(course)}</div>
+        <div style="font-size:12.5px;color:var(--ink-500);margin-top:3px;">${flagEmoji(course.country)} ${escapeHTML(course.name)} · ${escapeHTML(course.loc)} · Par ${courseParTotal(course)} · Purse $${(ev.purse||0).toLocaleString()}</div>
       </div>
       <div style="text-align:right;min-width:160px;">
         ${winner?`<div class="eyebrow">Winner</div><div style="font-family:'Oswald',sans-serif;font-size:15px;">${escapeHTML(winner.name)}</div>`:
@@ -805,7 +1282,7 @@ function renderCourses(){
     return `<div class="card" style="padding:16px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div>
-          <div class="eyebrow">${c.country}</div>
+          <div class="eyebrow">${flagEmoji(c.country)} ${c.country}</div>
           <h3 style="font-size:16px;margin-top:2px;">${escapeHTML(c.name)}</h3>
           <div style="font-size:12px;color:var(--ink-500);">${escapeHTML(c.loc)}</div>
         </div>
@@ -860,7 +1337,10 @@ function renderRoster(){
           <div style="font-size:9.5px;text-transform:uppercase;color:var(--ink-500);">${tier.label}</div>
         </div>
       </div>
-      <div style="font-size:11px;margin-top:6px;color:${form.color};font-weight:600;">${form.label}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
+        <div style="font-size:11px;color:${form.color};font-weight:600;">${form.label}</div>
+        <div style="font-size:11.5px;color:var(--turf-700);font-weight:700;">💰 $${(st.prizeMoney||0).toLocaleString()}</div>
+      </div>
       ${ATTRS.map(a=>`<div class="attr-bar-row"><span>${a.label}</span><div class="attr-bar-track"><div class="attr-bar-fill" style="width:${p.attrs[a.key]}%;"></div></div><span class="num">${p.attrs[a.key]}</span></div>`).join('')}
       ${(h.majors||h.tourChamps||h.champGolfer)?`<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
         ${h.majors?`<span class="hof-badge"><span class="n">${h.majors}</span><span class="l">Majors</span></span>`:''}
@@ -938,16 +1418,202 @@ function openPlayerEditModal(pid){
   draw();
 }
 
+/* ---- Team Pairings ---- */
+function renderTeams(){
+  const el=document.getElementById('view-teams');
+  const locked=teamEventStarted();
+  const ev=teamEvent();
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">${ev?escapeHTML(ev.name):'Team Event'} · Foursomes (Alternate Shot)</span><h2>Team Pairings</h2></div>
+    <div class="eyebrow">${STATE.teamsFinalized?'✅ Finalized':'⚠️ Not finalized yet'}</div></div>
+  <p style="font-size:12.5px;color:var(--ink-500);margin-bottom:14px;max-width:720px;line-height:1.5;">Pair the 12-player field into 6 two-man teams before ${ev?escapeHTML(ev.name):'the team event'} begins. Partners alternate every shot on one ball — one drives, the other plays the next, and so on. Re-pair however you like each new Tour; pairings lock once the event's first hole is played.</p>
+  <div class="grid cols-3" style="margin-bottom:16px;">
+  ${STATE.teams.map((t,ti)=>`<div class="card" style="padding:14px;">
+    <div class="eyebrow" style="margin-bottom:8px;">Team ${ti+1}</div>
+    ${[0,1].map(slot=>`<select data-team="${ti}" data-slot="${slot}" ${locked?'disabled':''} style="width:100%;padding:7px 9px;margin-bottom:6px;border:1px solid var(--line);border-radius:4px;font-family:'Inter',sans-serif;font-size:12.5px;background:#fff;">
+      <option value="">— choose player —</option>
+      ${STATE.players.map(p=>`<option value="${p.id}" ${t.playerIds[slot]===p.id?'selected':''}>${escapeHTML(p.name)}</option>`).join('')}
+    </select>`).join('')}
+  </div>`).join('')}
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    ${locked?`<span style="font-size:12.5px;color:var(--ink-500);">Pairings are locked — ${ev?escapeHTML(ev.name):'the team event'} has already begun. Start a new Tour to re-pair.</span>`:`
+    <button class="btn ghost btn-sm" id="teams-autopair">Auto-Pair Randomly</button>
+    <button class="btn amber btn-sm" id="teams-finalize">Finalize Pairings</button>`}
+  </div>`;
+  if(locked)return;
+  el.querySelectorAll('select[data-team]').forEach(sel=>sel.addEventListener('change',()=>{
+    const ti=parseInt(sel.dataset.team,10),slot=parseInt(sel.dataset.slot,10);
+    STATE.teams[ti].playerIds[slot]=sel.value||null;
+    STATE.teamsFinalized=false;
+    saveState();renderTeams();
+  }));
+  document.getElementById('teams-autopair').addEventListener('click',()=>{
+    STATE.teams=buildDefaultTeams(shuffledPlayers());
+    STATE.teamsFinalized=false;saveState();renderTeams();showToast('Pairings shuffled.');
+  });
+  document.getElementById('teams-finalize').addEventListener('click',()=>{
+    const err=teamsValidationError();
+    if(err){showToast(err,true);return;}
+    STATE.teamsFinalized=true;saveState();renderTeams();refreshTopbar();showToast('Team pairings finalized!');
+  });
+}
+
+/* ---- Team (Foursomes) Play ---- */
+function renderTeamPlay(el,ev){
+  if(!STATE.teamsFinalized){
+    el.innerHTML=`<div class="empty-state"><h3>Finalize your team pairings first</h3><p>Head to the Teams tab to pair up the 12-player field into 6 two-man teams before ${escapeHTML(ev.name)} can begin.</p><button class="btn amber btn-sm" id="goto-teams">Go to Teams</button></div>`;
+    document.getElementById('goto-teams').addEventListener('click',()=>switchView('teams'));
+    return;
+  }
+  ensureTeamRounds(ev);
+  const course=getCourse(ev.courseId);
+  if(!ev.__ri&&ev.__ri!==0)ev.__ri=ev.rounds.findIndex(r=>!STATE.teams.every(t=>r.scores[t.id].every(v=>v!=null)));
+  if(ev.__ri===-1)ev.__ri=3;
+  const ri=ev.__ri;
+  const lb=computeTeamLeaderboard(ev);
+  el.innerHTML=`<div class="section-head"><div><span class="eyebrow">Foursomes · ${escapeHTML(course.name)} · ${escapeHTML(course.loc)}</span><h2>${escapeHTML(ev.name)}</h2></div>
+    <div><button class="btn ghost btn-sm" id="sim-whole-team-event">Simulate Entire Event</button></div></div>
+  <div class="grid cols-2" style="align-items:start;">
+    <div>
+      <div class="card" style="padding:14px;margin-bottom:12px;">
+        <div class="eyebrow" style="margin-bottom:8px;">Round</div>
+        <div style="display:flex;gap:6px;">
+          ${[0,1,2,3].map(r=>`<button class="btn ${r===ri?'':'ghost'} btn-sm" data-team-round="${r}" ${r>ri&&!teamRoundComplete(ev,ri)?'disabled':''}>R${r+1}${teamRoundComplete(ev,r)?' ✓':''}</button>`).join('')}
+        </div>
+        <div class="wind-flag" style="margin-top:10px;color:var(--sky-blue);">💨 ${WIND_LABELS[ev.rounds[ri].windLevel]} wind · ${windMphDisplay(ev.rounds[ri].windLevel)} mph</div>
+      </div>
+      <div id="team-play-panel"></div>
+    </div>
+    <div class="card" style="padding:14px;">
+      <div class="eyebrow" style="margin-bottom:8px;">Leaderboard · Thru ${lb.length?Math.max(...lb.map(r=>r.roundsPlayed<4?r.thru:18)):0}</div>
+      ${ev.playoff?`<div style="font-size:12px;color:var(--flag-red);margin-bottom:8px;">🏆 ${escapeHTML(teamLabel(getTeam(ev.playoff.winnerId)))} won a ${ev.playoff.holes.length}-hole playoff over ${ev.playoff.leaderIds.length-1} other${ev.playoff.leaderIds.length>2?'s':''} tied at the lead.</div>`:''}
+      <table><thead><tr><th>Pos</th><th>Team</th><th>To Par</th><th>Thru</th><th>Total</th></tr></thead><tbody>
+      ${lb.map(r=>`<tr><td>${r.pos}</td><td>${escapeHTML(r.name)}</td><td class="num" style="color:${r.toPar<0?'var(--flag-red)':'inherit'};">${toParStr(r.toPar)}</td><td>${r.roundsPlayed>=4?'F':`R${r.roundsPlayed+1} · ${r.thru}`}</td><td class="num">${r.total}</td></tr>`).join('')}
+      </tbody></table>
+    </div>
+  </div>`;
+  el.querySelectorAll('[data-team-round]').forEach(b=>b.addEventListener('click',()=>{
+    const r=parseInt(b.dataset.teamRound,10);
+    if(r>0&&!teamRoundComplete(ev,r-1)){showToast('Finish the previous round first.',true);return;}
+    ev.__ri=r;PLAY_TEAM.focusTeamId=null;PLAY_TEAM.hs=null;PLAY_TEAM.holeStates={};renderPlay();
+  }));
+  document.getElementById('sim-whole-team-event').addEventListener('click',()=>{
+    simulateEntireTeamEvent(ev);showToast(`${ev.name} complete!`);refreshTopbar();renderPlay();
+  });
+  renderTeamPanel(ev,ri);
+}
+function renderTeamPanel(ev,ri){
+  const panel=document.getElementById('team-play-panel');
+  const pending=STATE.teams.filter(t=>nextOpenHole(ev,ri,t.id)!==-1);
+  if(pending.length===0){
+    panel.innerHTML=`<div class="card" style="padding:20px;text-align:center;">
+      <h3>Round ${ri+1} complete</h3>
+      ${ri<3?`<button class="btn amber" id="advance-team-r" style="margin-top:12px;">Continue to Round ${ri+2}</button>`:`<button class="btn amber" id="finalize-team-ev" style="margin-top:12px;">Finalize Event</button>`}
+    </div>`;
+    document.getElementById('advance-team-r')?.addEventListener('click',()=>{ev.__ri=ri+1;renderPlay();});
+    document.getElementById('finalize-team-ev')?.addEventListener('click',()=>{finishTeamEventIfDone(ev);showToast(`${ev.name} is complete!`);refreshTopbar();renderPlay();});
+    return;
+  }
+  if(PLAY_TEAM.focusTeamId&&!pending.some(t=>t.id===PLAY_TEAM.focusTeamId)){PLAY_TEAM.focusTeamId=null;PLAY_TEAM.hs=null;}
+  panel.innerHTML=`<div class="card" style="padding:14px;margin-bottom:12px;">
+    <div class="eyebrow" style="margin-bottom:8px;">Pick a team to step up to the tee</div>
+    <div class="player-chip-row">
+      ${STATE.teams.map(t=>{
+        const done=nextOpenHole(ev,ri,t.id)===-1;
+        const active=t.id===PLAY_TEAM.focusTeamId;
+        return `<button class="player-chip ${active?'active':''}" data-team-focus="${t.id}" ${done?'disabled':''}>
+          ${escapeHTML(teamLabel(t))} <span style="opacity:.7;">${done?'· done':'· H'+(nextOpenHole(ev,ri,t.id)+1)}</span>
+        </button>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;border-top:1px solid var(--line);padding-top:10px;">
+      <button class="btn ghost btn-sm" id="sim-rest-team-round">Simulate Rest of Round (everyone else)</button>
+      <button class="btn ghost btn-sm" id="sim-team-round-all" style="border-color:var(--board-amber);color:#7a5a0a;">Simulate Whole Round (all teams)</button>
+    </div>
+  </div>
+  <div id="team-hole-control"></div>`;
+  panel.querySelectorAll('[data-team-focus]').forEach(b=>b.addEventListener('click',()=>{
+    const tid=b.dataset.teamFocus;PLAY_TEAM.focusTeamId=tid;
+    const hIdx=nextOpenHole(ev,ri,tid);PLAY_TEAM.holeIdx=hIdx;
+    const cached=PLAY_TEAM.holeStates[tid];
+    let state;
+    if(cached&&cached._forHoleIdx===hIdx)state=cached;
+    else{state=newHoleState(getCourse(ev.courseId).holes[hIdx]);state._forHoleIdx=hIdx;state._leadIsA=(hIdx%2===0);state._turnIsA=state._leadIsA;}
+    setTeamPlayHoleState(tid,state);
+    renderPlay();
+  }));
+  document.getElementById('sim-rest-team-round').addEventListener('click',()=>{
+    simulateRestOfTeamRound(ev,ri,PLAY_TEAM.focusTeamId);
+    Object.keys(PLAY_TEAM.holeStates).forEach(tid=>{if(tid!==PLAY_TEAM.focusTeamId)delete PLAY_TEAM.holeStates[tid];});
+    showToast('Simulated the field.');renderPlay();
+  });
+  document.getElementById('sim-team-round-all').addEventListener('click',()=>{
+    simulateRestOfTeamRound(ev,ri,null);PLAY_TEAM.focusTeamId=null;PLAY_TEAM.hs=null;PLAY_TEAM.holeStates={};showToast(`Round ${ri+1} simulated for everyone.`);renderPlay();
+  });
+  if(PLAY_TEAM.focusTeamId)renderTeamHoleControl(ev,ri);
+  else document.getElementById('team-hole-control').innerHTML=`<div class="empty-state" style="padding:26px;"><p>Select a team above to play shot-by-shot, or simulate the round instantly.</p></div>`;
+}
+function renderTeamHoleControl(ev,ri){
+  const course=getCourse(ev.courseId);const holeDef=course.holes[PLAY_TEAM.holeIdx];const rnd=ev.rounds[ri];
+  const tid=PLAY_TEAM.focusTeamId;const team=getTeam(tid);const hs=PLAY_TEAM.hs;
+  const pA=getPlayer(team.playerIds[0]),pB=getPlayer(team.playerIds[1]);
+  const onTee=hs._turnIsA?pA:pB;
+  const wrap=document.getElementById('team-hole-control');
+  const scoreArr=rnd.scores[tid];
+  const parSoFar=course.holes.slice(0,PLAY_TEAM.holeIdx).reduce((s,h)=>s+h.par,0);
+  const strokesSoFar=scoreArr.slice(0,PLAY_TEAM.holeIdx).reduce((s,v)=>s+(v||0),0);
+  wrap.innerHTML=`<div class="grid cols-2" style="align-items:start;">
+    <div class="card" style="padding:16px;text-align:center;">
+      <div class="eyebrow">Hole ${PLAY_TEAM.holeIdx+1} · Par ${holeDef.par} · ${holeDef.yards}y ${holeDef.water?'<span class="badge water">Water</span>':''}</div>
+      ${buildHoleSVG(course,holeDef,hs,rnd.windLevel,rnd.windDir)}
+    </div>
+    <div class="card" style="padding:16px;">
+      <div style="display:flex;justify-content:space-between;">
+        <div><div class="eyebrow">${escapeHTML(teamLabel(team))}</div><h3 style="font-size:17px;">On the tee: ${escapeHTML(onTee.name)}</h3><div style="font-size:12px;color:var(--ink-500);">${lieLabel(hs.lie)} · Shot ${hs.strokes+1}</div></div>
+        <div style="text-align:right;"><div class="eyebrow">Thru ${PLAY_TEAM.holeIdx}</div><div class="num" style="font-size:18px;">${PLAY_TEAM.holeIdx===0?'—':toParStr(strokesSoFar-parSoFar)}</div></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:14px;background:var(--sand-200);border-radius:4px;padding:12px 14px;">
+        <div style="flex:1;"><div class="eyebrow">Lie</div><div style="color:${lieColor(hs.lie)};font-family:'Oswald',sans-serif;">${lieLabel(hs.lie)}</div></div>
+        <div style="flex:1;text-align:center;"><div class="eyebrow">${hs.lie==='green'?'To Hole':'To Pin'}</div><div class="num" style="font-size:18px;">${hs.lie==='green'?hs.puttDistanceFt+' ft':Math.round(hs.remaining)+'y'}</div></div>
+        <div style="flex:1;text-align:right;"><div class="eyebrow">Strokes</div><div class="num" style="font-size:18px;">${hs.strokes}</div></div>
+      </div>
+      <div style="margin-top:10px;max-height:120px;overflow-y:auto;display:flex;flex-direction:column-reverse;gap:5px;" class="scrollbar-thin">
+        ${hs.log.slice().reverse().map((l,i)=>`<div style="font-size:12.5px;padding:6px 9px;background:${i===0?'rgba(51,113,74,.1)':'transparent'};border-left:3px solid ${i===0?'var(--turf-600)':'var(--line)'};border-radius:3px;">${escapeHTML(l)}</div>`).join('')}
+      </div>
+      <button class="btn amber" id="team-hit-shot" style="width:100%;margin-top:12px;padding:13px;" ${hs.holedOut?'disabled':''}>${hs.strokes===0?escapeHTML(onTee.name.split(' ')[0])+' Tees Off':'Hit Next Shot ('+escapeHTML(onTee.name.split(' ')[0])+')'}</button>
+      ${hs.holedOut?`<button class="btn" id="team-confirm-hole" style="width:100%;margin-top:8px;">Confirm ${hs.strokes} · ${holeResultWord(hs.strokes,holeDef.par)} — Next Hole</button>`:''}
+    </div>
+  </div>`;
+  document.getElementById('team-hit-shot').addEventListener('click',()=>{
+    const bias=roundPaceBias(ev,rnd,tid,PLAY_TEAM.holeIdx);
+    playShot(hs,effectiveAttrs(onTee,rnd.luck&&rnd.luck[tid],bias),ev.difficulty,rnd.windLevel,holeDef.water);
+    hs._turnIsA=!hs._turnIsA;
+    renderTeamHoleControl(ev,ri);
+  });
+  document.getElementById('team-confirm-hole')?.addEventListener('click',()=>{
+    rnd.scores[tid][PLAY_TEAM.holeIdx]=hs.strokes;
+    const next=nextOpenHole(ev,ri,tid);
+    if(next===-1){PLAY_TEAM.focusTeamId=null;setTeamPlayHoleState(tid,null);showToast(`${teamLabel(team)} sign for their card.`);}
+    else{
+      PLAY_TEAM.holeIdx=next;
+      const state=newHoleState(course.holes[next]);
+      state._forHoleIdx=next;state._leadIsA=(next%2===0);state._turnIsA=state._leadIsA;
+      setTeamPlayHoleState(tid,state);
+    }
+    saveState();renderPlay();
+  });
+}
+
 /* ---- Points Table ---- */
 function renderPoints(){
   const el=document.getElementById('view-points');
-  const completedEvents=STATE.events.filter(e=>e.kind==='stroke'&&e.status==='complete');
+  const completedEvents=STATE.events.filter(e=>(e.kind==='stroke'||e.kind==='team')&&e.status==='complete');
   const ranked=STATE.players.slice().sort((a,b)=>STATE.standings[b.id].points-STATE.standings[a.id].points);
   const finaleReached=STATE.events[8].status==='complete';
   el.innerHTML=`<div class="section-head"><div><span class="eyebrow">Season Standings</span><h2>Points Table</h2></div>
     <div class="eyebrow">${finaleReached?'Top 8 qualify for the V TOUR Championship':'9 stroke-play events determine the Tour Champion'}</div></div>
   <div class="card scrollbar-thin" style="overflow-x:auto;padding:4px;">
-  <table><thead><tr><th>#</th><th>Player</th>${completedEvents.map(e=>`<th title="${escapeHTML(e.name)}">${e.major?'★ ':''}E${e.idx+1}</th>`).join('')}<th>Total</th></tr></thead>
+  <table><thead><tr><th>#</th><th>Player</th>${completedEvents.map(e=>`<th title="${escapeHTML(e.name)}">${e.major?'★ ':''}${e.kind==='team'?'👥 ':''}E${e.idx+1}</th>`).join('')}<th>Total</th><th>Prize $</th></tr></thead>
   <tbody>
   ${ranked.map((p,i)=>{
     const st=STATE.standings[p.id];
@@ -957,7 +1623,8 @@ function renderPoints(){
       const h=st.history.find(x=>x.eventIdx===e.idx);
       return `<td class="num">${h?h.points:'—'}</td>`;
     }).join('')}
-    <td class="num" style="font-weight:700;">${st.points.toLocaleString()}</td></tr>`;
+    <td class="num" style="font-weight:700;">${st.points.toLocaleString()}</td>
+    <td class="num" style="color:var(--turf-700);font-weight:600;">$${(st.prizeMoney||0).toLocaleString()}</td></tr>`;
   }).join('')}
   </tbody></table>
   </div>`;
@@ -1009,6 +1676,7 @@ function renderPlay(){
   const ev=ci!==-1?STATE.events[ci]:STATE.events[9];
   if(!ev||ev.status==='upcoming'&&ev.idx!==9){el.innerHTML=`<div class="empty-state"><h3>Nothing to play yet</h3><p>Head to Schedule to see what's up next.</p></div>`;return;}
   if(ev.kind==='final')renderFinalePlay(el,ev);
+  else if(ev.kind==='team')renderTeamPlay(el,ev);
   else renderStrokePlay(el,ev);
 }
 function renderStrokePlay(el,ev){
@@ -1033,6 +1701,7 @@ function renderStrokePlay(el,ev){
     </div>
     <div class="card" style="padding:14px;">
       <div class="eyebrow" style="margin-bottom:8px;">Leaderboard · Thru ${lb.length?Math.max(...lb.map(r=>r.roundsPlayed<4?r.thru:18)):0}</div>
+      ${ev.playoff?`<div style="font-size:12px;color:var(--flag-red);margin-bottom:8px;">🏆 ${escapeHTML(getPlayer(ev.playoff.winnerId).name)} won a ${ev.playoff.holes.length}-hole playoff over ${ev.playoff.leaderIds.length-1} other${ev.playoff.leaderIds.length>2?'s':''} tied at the lead.</div>`:''}
       <table><thead><tr><th>Pos</th><th>Player</th><th>To Par</th><th>Thru</th><th>Total</th></tr></thead><tbody>
       ${lb.map(r=>`<tr><td>${r.pos}</td><td>${escapeHTML(r.name)}</td><td class="num" style="color:${r.toPar<0?'var(--flag-red)':'inherit'};">${toParStr(r.toPar)}</td><td>${r.roundsPlayed>=4?'F':`R${r.roundsPlayed+1} · ${r.thru}`}</td><td class="num">${r.total}</td></tr>`).join('')}
       </tbody></table>
@@ -1134,7 +1803,8 @@ function renderHoleControl(ev,ri){
     </div>
   </div>`;
   document.getElementById('hit-shot').addEventListener('click',()=>{
-    playShot(hs,effectiveAttrs(player,rnd.luck&&rnd.luck[pid]),ev.difficulty,rnd.windLevel,holeDef.water);
+    const bias=roundPaceBias(ev,rnd,pid,PLAY.holeIdx);
+    playShot(hs,effectiveAttrs(player,rnd.luck&&rnd.luck[pid],bias),ev.difficulty,rnd.windLevel,holeDef.water);
     renderHoleControl(ev,ri);
   });
   document.getElementById('confirm-hole')?.addEventListener('click',()=>{
@@ -1262,7 +1932,8 @@ function openResetModal(){
 
 /* ===== INIT ===== */
 function init(){
-  STATE=loadState()||freshState();
+  const loaded=loadState();
+  STATE=loaded?migrateState(loaded):freshState();
   saveState();
   wireNav();refreshTopbar();switchView('dashboard');
 }
